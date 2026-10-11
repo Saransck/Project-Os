@@ -143,20 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 5. Gantt Chart Zoom Controls
-  document.getElementById('btn-zoom-in')?.addEventListener('click', () => {
-    gantt.zoomIn();
-  });
-
-  document.getElementById('btn-zoom-out')?.addEventListener('click', () => {
-    gantt.zoomOut();
-  });
-
-  document.getElementById('btn-zoom-reset')?.addEventListener('click', () => {
-    gantt.resetZoom();
-  });
-
-  // 6. Gantt Timeline Scrubber Slider
+  // 5. Gantt Timeline Scrubber Slider
   const timeScrubber = document.getElementById('gantt-time-scrubber');
   const scrubberVal = document.getElementById('scrubber-time-val');
   timeScrubber?.addEventListener('input', (e) => {

@@ -40,14 +40,38 @@ export class UIController {
     this.renderProcessTable();
   }
 
-  addProcess() {
-    const id = this.nextProcessId++;
+  addProcess(customId = null) {
+    // Find next available positive integer for suggestion
+    const existingIds = new Set(this.processes.map((p) => Number(p.id)));
+    let suggested = 1;
+    while (existingIds.has(suggested)) {
+      suggested++;
+    }
+
+    let chosenId = customId;
+    if (chosenId === null || chosenId === undefined) {
+      const input = prompt('ระบุหมายเลข Process ที่ต้องการเพิ่ม (เช่น 1, 2, 5):', suggested);
+      if (input === null) return; // User pressed cancel
+      const cleaned = input.trim().replace(/^p/i, '');
+      const parsed = parseInt(cleaned, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        alert('กรุณาระบุหมายเลข Process เป็นตัวเลข (เช่น 1, 2, 3...)');
+        return;
+      }
+      chosenId = parsed;
+    }
+
+    if (this.processes.some((p) => p.id === chosenId)) {
+      alert(`Process P${chosenId} มีอยู่ในตารางแล้ว กรุณาใช้หมายเลขอื่น`);
+      return;
+    }
+
     const defaultArrival = this.processes.length > 0 ? Math.max(...this.processes.map((p) => p.arrivalTime)) : 0;
     this.processes.push({
-      id,
-      name: `P${id}`,
+      id: chosenId,
+      name: `P${chosenId}`,
       arrivalTime: defaultArrival,
-      burstTime: Math.floor(Math.random() * 8) + 2,
+      burstTime: Math.floor(Math.random() * 6) + 3,
       priority: 1,
       queue: 0,
     });
@@ -68,10 +92,11 @@ export class UIController {
   clearProcesses() {
     this.processes = [];
     this.nextProcessId = 1;
-    this.addProcess();
+    this.addProcess(1);
   }
 
   renderProcessTable() {
+    if (typeof document === 'undefined') return;
     const tbody = document.getElementById('process-table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -92,8 +117,9 @@ export class UIController {
 
       tr.innerHTML = `
         <td>
-          <div class="process-badge" style="background: ${color.bg}; border-color: ${color.border}">
-            ${p.name}
+          <div class="process-badge-editable" style="background: ${color.bg}; border-color: ${color.border}">
+            <span class="proc-p-prefix">P</span>
+            <input type="number" min="0" max="999" class="proc-id-input" value="${p.id}" data-id="${p.id}" data-field="id" title="คลิกเพื่อแก้ไขหมายเลข Process" />
           </div>
         </td>
         <td>
@@ -130,6 +156,28 @@ export class UIController {
         const id = Number(e.target.dataset.id);
         const field = e.target.dataset.field;
         let val = Number(e.target.value);
+
+        if (field === 'id') {
+          if (isNaN(val) || val < 0) {
+            alert('หมายเลข Process ต้องเป็นตัวเลข');
+            e.target.value = id;
+            return;
+          }
+          if (val !== id && this.processes.some((p) => p.id === val)) {
+            alert(`Process P${val} มีอยู่ในตารางแล้ว กรุณาเลือกหมายเลขอื่น`);
+            e.target.value = id;
+            return;
+          }
+          const targetProc = this.processes.find((p) => p.id === id);
+          if (targetProc) {
+            targetProc.id = val;
+            targetProc.name = `P${val}`;
+            this.renderProcessTable();
+            this.notifyProcessChange();
+          }
+          return;
+        }
+
         if (isNaN(val)) val = field === 'burstTime' ? 1 : 0;
         const targetProc = this.processes.find((p) => p.id === id);
         if (targetProc) {
@@ -168,6 +216,17 @@ export class UIController {
   }
 
   getCurrentOptions() {
+    if (typeof document === 'undefined') {
+      return {
+        quantum: 4,
+        contextSwitch: 0,
+        agingRate: 0,
+        agingThreshold: 25,
+        q0Quantum: 8,
+        q1Quantum: 16,
+        preemptive: this.currentAlgorithm === 'PRIORITY_P',
+      };
+    }
     return {
       quantum: Number(document.getElementById('input-quantum')?.value) || 4,
       contextSwitch: Number(document.getElementById('input-context-switch')?.value) || 0,

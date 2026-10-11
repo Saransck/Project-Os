@@ -1,6 +1,7 @@
 /**
  * Gantt Chart Renderer
- * Handles rendering the interactive Gantt chart, time ticks, playhead cursor, zoom levels, and tooltips.
+ * Renders a fixed 100% responsive Gantt chart that scales proportionally
+ * to container width without overflowing or breaking through the screen.
  */
 
 const PROCESS_COLORS = [
@@ -34,8 +35,6 @@ export class GanttChartRenderer {
     this.tooltip = tooltipElement;
     this.timeline = [];
     this.totalTime = 0;
-    this.basePixelsPerUnit = 32; // base width per 1ms
-    this.zoomMultiplier = 1.0;
     this.currentResult = null;
     this.onBlockClickCallback = null;
   }
@@ -44,20 +43,10 @@ export class GanttChartRenderer {
     this.onBlockClickCallback = fn;
   }
 
-  zoomIn() {
-    this.zoomMultiplier = Math.min(3.0, Number((this.zoomMultiplier + 0.25).toFixed(2)));
-    if (this.currentResult) this.render(this.currentResult);
-  }
-
-  zoomOut() {
-    this.zoomMultiplier = Math.max(0.5, Number((this.zoomMultiplier - 0.25).toFixed(2)));
-    if (this.currentResult) this.render(this.currentResult);
-  }
-
-  resetZoom() {
-    this.zoomMultiplier = 1.0;
-    if (this.currentResult) this.render(this.currentResult);
-  }
+  // Zoom no-ops preserved for backward compatibility
+  zoomIn() {}
+  zoomOut() {}
+  resetZoom() {}
 
   render(result) {
     if (!this.container) return;
@@ -71,14 +60,10 @@ export class GanttChartRenderer {
     this.timeline = result.timeline.filter((b) => b.endTime > b.startTime);
     this.totalTime = Math.max(1, result.totalTime || (this.timeline.length > 0 ? Math.max(...this.timeline.map((b) => b.endTime)) : 1));
 
-    // Dynamic width calculation with zoom multiplier
-    const pxPerUnit = this.basePixelsPerUnit * this.zoomMultiplier;
-    const computedWidth = this.totalTime * pxPerUnit;
-    const minWidth = Math.max(this.container.clientWidth || 600, computedWidth);
-
+    // Fixed 100% responsive width layout - never overflows container
     const chartWrapper = document.createElement('div');
     chartWrapper.className = 'gantt-wrapper';
-    chartWrapper.style.width = `${minWidth}px`;
+    chartWrapper.style.width = '100%';
 
     // 1. Gantt Bar Row
     const barRow = document.createElement('div');
@@ -94,12 +79,14 @@ export class GanttChartRenderer {
     playhead.id = 'gantt-playhead';
     playhead.style.display = 'none';
 
-    // Add 0 tick mark
+    // Add 0 tick mark at start
     const tickZero = document.createElement('span');
     tickZero.className = 'tick-mark start-zero';
     tickZero.textContent = '0';
-    tickZero.style.left = '0px';
+    tickZero.style.left = '0%';
     ticksRow.appendChild(tickZero);
+
+    let lastTickPct = 0;
 
     this.timeline.forEach((block, index) => {
       const duration = block.endTime - block.startTime;
@@ -117,17 +104,22 @@ export class GanttChartRenderer {
       blockEl.style.left = `${leftPct}%`;
       blockEl.style.width = `${widthPct}%`;
 
-      // Compact display if width is too narrow
-      const isNarrow = (duration * pxPerUnit) < 45;
+      // Adaptive label formatting based on percentage of available width
+      const isVeryNarrow = widthPct < 3.2;
+      const isNarrow = widthPct < 7.0;
 
       if (block.isIdle) {
         blockEl.classList.add('block-idle');
-        blockEl.innerHTML = isNarrow
-          ? `<span class="block-label compact">IDLE</span>`
-          : `<span class="block-label">IDLE</span><span class="block-sub">${duration}ms</span>`;
+        if (isVeryNarrow) {
+          blockEl.innerHTML = '';
+        } else if (isNarrow) {
+          blockEl.innerHTML = `<span class="block-label compact">IDLE</span>`;
+        } else {
+          blockEl.innerHTML = `<span class="block-label">IDLE</span><span class="block-sub">${duration}ms</span>`;
+        }
       } else if (block.isContextSwitch) {
         blockEl.classList.add('block-cs');
-        blockEl.innerHTML = `<span class="block-label compact">CS</span>`;
+        blockEl.innerHTML = isVeryNarrow ? '' : `<span class="block-label compact">CS</span>`;
       } else {
         const color = getProcessColor(block.processId);
         blockEl.style.background = color.bg;
@@ -135,7 +127,9 @@ export class GanttChartRenderer {
         blockEl.style.color = color.text;
         const qBadge = block.queueLevel !== undefined ? `<small class="q-badge">Q${block.queueLevel}</small>` : '';
 
-        if (isNarrow) {
+        if (isVeryNarrow) {
+          blockEl.innerHTML = '';
+        } else if (isNarrow) {
           blockEl.innerHTML = `<span class="block-label compact">${block.processName}</span>`;
         } else {
           blockEl.innerHTML = `
@@ -159,12 +153,18 @@ export class GanttChartRenderer {
 
       barRow.appendChild(blockEl);
 
-      // Add Tick mark for End Time
-      const tick = document.createElement('span');
-      tick.className = 'tick-mark';
-      tick.textContent = block.endTime;
-      tick.style.left = `${(block.endTime / this.totalTime) * 100}%`;
-      ticksRow.appendChild(tick);
+      // Add Tick mark for End Time (avoid overlapping if blocks are tiny)
+      const tickPct = (block.endTime / this.totalTime) * 100;
+      const isLast = index === this.timeline.length - 1;
+      if (isLast || (tickPct - lastTickPct >= 3.8)) {
+        const tick = document.createElement('span');
+        tick.className = 'tick-mark';
+        if (isLast) tick.classList.add('tick-end');
+        tick.textContent = block.endTime;
+        tick.style.left = `${tickPct}%`;
+        ticksRow.appendChild(tick);
+        lastTickPct = tickPct;
+      }
     });
 
     chartWrapper.appendChild(barRow);
