@@ -3,11 +3,11 @@
  */
 
 export const PRESETS = {
-  slide24_fcfs: {
-    id: 'slide24_fcfs',
-    name: 'Slide 24: FCFS Convoy Effect (Long P1)',
+  fcfs_convoy: {
+    id: 'fcfs_convoy',
+    name: 'FCFS: Convoy Effect (Long Burst First)',
     algorithm: 'FCFS',
-    description: 'P1(24ms), P2(3ms), P3(3ms) arriving at t=0. Illustrates convoy effect with Average Waiting Time = 17ms.',
+    description: 'P1(24ms), P2(3ms), P3(3ms) arriving at t=0. Demonstrates convoy effect where short processes wait behind a long process (Avg WT = 17ms).',
     options: { contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1', arrivalTime: 0, burstTime: 24, priority: 1, queue: 0 },
@@ -16,11 +16,11 @@ export const PRESETS = {
     ],
   },
 
-  slide26_fcfs_opt: {
-    id: 'slide26_fcfs_opt',
-    name: 'Slide 26: FCFS Short First Order',
+  fcfs_short_first: {
+    id: 'fcfs_short_first',
+    name: 'FCFS: Short Burst First (Optimized Order)',
     algorithm: 'FCFS',
-    description: 'Arriving order P2, P3, P1 at t=0. Drastically lowers Average Waiting Time to 3ms.',
+    description: 'Order P2, P3, P1 at t=0. Demonstrates substantial waiting time reduction when short processes are served first (Avg WT = 3ms).',
     options: { contextSwitch: 0 },
     processes: [
       { id: 2, name: 'P2', arrivalTime: 0, burstTime: 3, priority: 1, queue: 0 },
@@ -29,11 +29,11 @@ export const PRESETS = {
     ],
   },
 
-  slide30_sjf: {
-    id: 'slide30_sjf',
-    name: 'Slide 30: SJF (Non-preemptive)',
+  sjf_non_preemptive: {
+    id: 'sjf_non_preemptive',
+    name: 'SJF: Non-preemptive Batch',
     algorithm: 'SJF',
-    description: 'P1(6), P2(8), P3(7), P4(3) at t=0. Optimal scheduling yielding Average Waiting Time = 7ms.',
+    description: 'P1(6), P2(8), P3(7), P4(3) at t=0. Optimal scheduling yielding minimum average waiting time (Avg WT = 7ms).',
     options: { contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1', arrivalTime: 0, burstTime: 6, priority: 1, queue: 0 },
@@ -43,9 +43,9 @@ export const PRESETS = {
     ],
   },
 
-  slide36_srtf: {
-    id: 'slide36_srtf',
-    name: 'Slide 36: SRTF / Preemptive SJF',
+  srtf_preemptive: {
+    id: 'srtf_preemptive',
+    name: 'SRTF: Shortest Remaining Time First (Preemptive SJF)',
     algorithm: 'SRTF',
     description: 'P1(AT 0, BT 8), P2(AT 1, BT 4), P3(AT 2, BT 9), P4(AT 3, BT 5). P2 preempts P1 at t=1. Avg WT = 6.5ms.',
     options: { contextSwitch: 0 },
@@ -57,11 +57,11 @@ export const PRESETS = {
     ],
   },
 
-  slide40_rr: {
-    id: 'slide40_rr',
-    name: 'Slide 40: Round Robin (Time Quantum = 4)',
+  round_robin_q4: {
+    id: 'round_robin_q4',
+    name: 'Round Robin: Standard Quantum (q = 4)',
     algorithm: 'RR',
-    description: 'P1(24), P2(3), P3(3) with Quantum = 4ms. P1 gets 4ms, then P2 finishes (3ms), P3 finishes (3ms). Avg WT = 5.66ms.',
+    description: 'P1(24), P2(3), P3(3) with Quantum = 4ms. Fair time-slicing among active processes (Avg WT = 5.67ms).',
     options: { quantum: 4, contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1', arrivalTime: 0, burstTime: 24, priority: 1, queue: 0 },
@@ -70,11 +70,11 @@ export const PRESETS = {
     ],
   },
 
-  slide48_priority: {
-    id: 'slide48_priority',
-    name: 'Slide 48: Priority Non-preemptive',
+  priority_non_preemptive: {
+    id: 'priority_non_preemptive',
+    name: 'Priority: Non-preemptive Execution',
     algorithm: 'PRIORITY_NP',
-    description: 'P1(BT 10, Pri 3), P2(BT 1, Pri 1), P3(BT 2, Pri 4), P4(BT 1, Pri 5), P5(BT 5, Pri 2). Avg WT = 8.2ms.',
+    description: 'P1(BT 10, Pri 3), P2(BT 1, Pri 1), P3(BT 2, Pri 4), P4(BT 1, Pri 5), P5(BT 5, Pri 2). Lower number = higher priority. Avg WT = 8.2ms.',
     options: { preemptive: false, agingRate: 0, contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1', arrivalTime: 0, burstTime: 10, priority: 3, queue: 0 },
@@ -85,11 +85,11 @@ export const PRESETS = {
     ],
   },
 
-  slide53_priority_rr: {
-    id: 'slide53_priority_rr',
-    name: 'Slide 53: Priority with Round-Robin (q=2)',
+  priority_with_rr: {
+    id: 'priority_with_rr',
+    name: 'Priority + Round Robin (Equal Priority RR, q = 2)',
     algorithm: 'PRIORITY_RR',
-    description: 'Combines Priority with Round-Robin for equal priority. P4(Pri 1), P2&P3(Pri 2, RR q=2), P1&P5(Pri 3, RR q=2).',
+    description: 'Executes highest priority first; processes sharing equal priority are round-robined with quantum 2ms.',
     options: { quantum: 2, contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1', arrivalTime: 0, burstTime: 4, priority: 3, queue: 0 },
@@ -100,11 +100,11 @@ export const PRESETS = {
     ],
   },
 
-  slide63_mlfq: {
-    id: 'slide63_mlfq',
-    name: 'Slide 63: Multilevel Feedback Queue (Q0: q=8, Q1: q=16, Q2: FCFS)',
+  mlfq_3level: {
+    id: 'mlfq_3level',
+    name: 'Multilevel Feedback Queue (Q0: q=8, Q1: q=16, Q2: FCFS)',
     algorithm: 'MLFQ',
-    description: '3-Queue feedback scheduler. Short processes finish in Q0, medium demote to Q1, long demote to Q2.',
+    description: '3-tier feedback queues. Short jobs finish quickly in Q0, medium sink to Q1, long jobs execute in Q2.',
     options: { q0Quantum: 8, q1Quantum: 16, agingThreshold: 25, contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1', arrivalTime: 0, burstTime: 6, priority: 1, queue: 0 },
@@ -116,9 +116,9 @@ export const PRESETS = {
 
   multilevel_queue: {
     id: 'multilevel_queue',
-    name: 'Slide 57: Multilevel Queue (Interactive vs Batch)',
+    name: 'Multilevel Queue: System vs Interactive vs Batch',
     algorithm: 'MLQ',
-    description: 'Queue 0: Real-time/System (RR q=4), Queue 1: Interactive (RR q=8), Queue 2: Batch (FCFS).',
+    description: 'Static partition: Q0 (System/RR q=4), Q1 (Interactive/RR q=8), Q2 (Batch/FCFS).',
     options: { q0Quantum: 4, q1Quantum: 8, contextSwitch: 0 },
     processes: [
       { id: 1, name: 'P1 (Sys)', arrivalTime: 0, burstTime: 6, priority: 1, queue: 0 },

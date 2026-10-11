@@ -15,14 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const tooltip = document.getElementById('gantt-tooltip');
   const gantt = new GanttChartRenderer(ganttContainer, tooltip);
 
-  // Initialize with Slide 36 (SRTF Preemptive SJF) preset by default for an exciting interactive start!
-  const defaultPreset = PRESETS.slide36_srtf;
+  // Initialize with SRTF Preemptive SJF preset by default
+  const defaultPreset = PRESETS.srtf_preemptive;
   ui.initProcesses(defaultPreset.processes);
 
   // Populate Presets Select Dropdown
   const presetSelect = document.getElementById('preset-select');
   if (presetSelect) {
-    presetSelect.innerHTML = '<option value="">-- เลือกตัวอย่างจากสไลด์อาจารย์ / Presets --</option>';
+    presetSelect.innerHTML = '<option value="">-- เลือกชุดข้อมูลตัวอย่าง (Presets) --</option>';
     Object.values(PRESETS).forEach((p) => {
       const opt = document.createElement('option');
       opt.value = p.id;

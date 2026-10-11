@@ -33,7 +33,7 @@
         </div>
         <div>
           <h1 class="brand-title">CPU Scheduling Simulator</h1>
-          <p class="brand-subtitle">Operating Systems (03603332) • Chapter 4 Silberschatz</p>
+          <p class="brand-subtitle">Interactive Process Scheduling Visualizer & Benchmark</p>
         </div>
       </div>
 
@@ -83,7 +83,7 @@
           <div class="preset-left">
             <label for="preset-select" class="toolbar-label">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              ตัวอย่างโจทย์ตามสไลด์:
+              ชุดข้อมูลตัวอย่าง (Presets):
             </label>
             <select class="custom-select" id="preset-select">
               <!-- Dynamically populated from presets.js -->
@@ -221,7 +221,7 @@
                   </table>
                 </div>
                 <div class="table-footer-note">
-                  <small>* ค่า Priority ยิ่งน้อย = ความสำคัญยิ่งสูง (เช่น 0 หรือ 1 คือ Priority สูงสุด ตามสไลด์)</small>
+                  <small>* ค่า Priority ยิ่งน้อย = ความสำคัญยิ่งสูง (เช่น 0 หรือ 1 คือระดับ Priority สูงสุด)</small>
                 </div>
               </div>
             </div>
@@ -445,7 +445,7 @@
           <!-- Theory Card 1: Criteria -->
           <div class="card glass-panel">
             <div class="card-header">
-              <h3 class="card-title">1. เกณฑ์การจัดตารางเวลา (Scheduling Criteria - สไลด์หน้า 18-21)</h3>
+              <h3 class="card-title">1. เกณฑ์การจัดตารางเวลา (Scheduling Criteria)</h3>
             </div>
             <div class="card-body theory-content">
               <ul>
@@ -467,7 +467,7 @@
           <!-- Theory Card 2: Preemptive vs Nonpreemptive -->
           <div class="card glass-panel">
             <div class="card-header">
-              <h3 class="card-title">2. Preemptive vs Non-preemptive (สไลด์หน้า 7-12)</h3>
+              <h3 class="card-title">2. Preemptive vs Non-preemptive</h3>
             </div>
             <div class="card-body theory-content">
               <p>การตัดสินใจจัดตารางเวลาของ CPU เกิดขึ้นได้ 4 กรณี:</p>
@@ -485,7 +485,7 @@
           <!-- Theory Card 3: Convoy Effect & SJF Optimality -->
           <div class="card glass-panel">
             <div class="card-header">
-              <h3 class="card-title">3. Convoy Effect & SJF Optimality (สไลด์หน้า 27, 31)</h3>
+              <h3 class="card-title">3. Convoy Effect & SJF Optimality</h3>
             </div>
             <div class="card-body theory-content">
               <p><strong>Convoy Effect (ใน FCFS):</strong> เมื่อ Process งานยาว (CPU-bound) ได้เข้าทำก่อน ทำให้ Process งานสั้นๆ (I/O-bound) ต้องต่อคิวนาน ส่งผลให้ค่า Average Waiting Time พุ่งสูงมาก และ I/O devices ว่างเปล่า</p>
@@ -496,7 +496,7 @@
           <!-- Theory Card 4: MLFQ Design & Starvation Prevention -->
           <div class="card glass-panel">
             <div class="card-header">
-              <h3 class="card-title">4. MLFQ & Aging (สไลด์หน้า 51-52, 61-65)</h3>
+              <h3 class="card-title">4. MLFQ & Aging</h3>
             </div>
             <div class="card-body theory-content">
               <p><strong>Indefinite Blocking / Starvation:</strong> Process ความสำคัญต่ำอาจไม่ได้รันเลยหากมีงานที่มี Priority สูงเข้ามาเรื่อยๆ</p>
