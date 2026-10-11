@@ -1,16 +1,16 @@
 /**
  * CPU Scheduling Simulator - Core Algorithms
- * Based on Operating System Concepts (Silberschatz) & Lecture Slides Chapter 4
+ * Based on Operating System Concepts (Silberschatz) & Chapter 4 OS Theory
  */
 
 export class Process {
   constructor({ id, name, arrivalTime, burstTime, priority = 1, queue = 0 }) {
     this.id = id;
     this.name = name || `P${id}`;
-    this.arrivalTime = Number(arrivalTime);
-    this.burstTime = Number(burstTime);
-    this.priority = Number(priority);
-    this.queue = Number(queue); // For MLQ / MLFQ
+    this.arrivalTime = Math.max(0, Number(arrivalTime) || 0);
+    this.burstTime = Math.max(1, Number(burstTime) || 1);
+    this.priority = Math.max(0, Number(priority) || 0);
+    this.queue = Math.max(0, Math.min(2, Number(queue) || 0)); // For MLQ / MLFQ (0, 1, 2)
   }
 
   clone() {
@@ -64,7 +64,7 @@ export function computeMetrics(processes, timeline, totalTime, contextSwitchTime
   let totalRT = 0;
 
   processes.forEach((p) => {
-    const ct = completionTime[p.id];
+    const ct = completionTime[p.id] !== undefined ? completionTime[p.id] : p.arrivalTime;
     const st = firstStartTime[p.id] !== null ? firstStartTime[p.id] : ct;
     const tat = ct - p.arrivalTime;
     const wt = tat - p.burstTime;
@@ -90,7 +90,7 @@ export function computeMetrics(processes, timeline, totalTime, contextSwitchTime
   });
 
   const n = processes.length;
-  const finishTime = totalTime > 0 ? totalTime : 1;
+  const finishTime = Math.max(1, totalTime);
   const cpuUtilization = totalTime > 0 ? (busyCpuTime / totalTime) * 100 : 0;
   const throughput = totalTime > 0 ? n / totalTime : 0;
 
@@ -113,7 +113,7 @@ export function computeMetrics(processes, timeline, totalTime, contextSwitchTime
  * Non-preemptive scheduling in FIFO order.
  */
 export function scheduleFCFS(inputProcesses, options = {}) {
-  const cs = options.contextSwitch || 0;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
   const procs = inputProcesses.map((p) => p.clone());
   procs.sort((a, b) => a.arrivalTime - b.arrivalTime || a.id - b.id);
 
@@ -122,48 +122,51 @@ export function scheduleFCFS(inputProcesses, options = {}) {
   let currentTime = 0;
   let lastProcId = null;
 
-  // Track remaining work
-  const remaining = {};
-  procs.forEach((p) => (remaining[p.id] = p.burstTime));
-
   const completed = new Set();
   const readyQueue = [];
+  const arrived = new Set();
 
-  while (completed.size < procs.length) {
-    // Check arrivals
+  function admitArrivals(time) {
     procs.forEach((p) => {
-      if (p.arrivalTime <= currentTime && !readyQueue.includes(p.id) && !completed.has(p.id)) {
+      if (p.arrivalTime <= time && !arrived.has(p.id)) {
+        arrived.add(p.id);
         readyQueue.push(p.id);
       }
     });
+  }
+
+  admitArrivals(currentTime);
+
+  while (completed.size < procs.length) {
+    admitArrivals(currentTime);
 
     if (readyQueue.length === 0) {
-      // Find next arrival
-      const unarrived = procs.filter((p) => !completed.has(p.id));
+      const unarrived = procs.filter((p) => !arrived.has(p.id));
+      if (unarrived.length === 0) break;
+
       const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
-      const idleStart = currentTime;
-      const idleEnd = nextArr;
-
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: idleStart,
-        endTime: idleEnd,
-        isIdle: true,
-      });
-
-      // record steps during idle
-      for (let t = idleStart; t < idleEnd; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle: Waiting for next process arrival',
+      if (nextArr > currentTime) {
+        timeline.push({
+          processId: null,
+          processName: 'IDLE',
+          startTime: currentTime,
+          endTime: nextArr,
+          isIdle: true,
         });
-      }
 
-      currentTime = nextArr;
+        for (let t = currentTime; t < nextArr; t++) {
+          steps.push({
+            time: t,
+            runningProcess: null,
+            readyQueue: [],
+            completedProcesses: Array.from(completed),
+            actionDescription: 'CPU Idle: Waiting for arrivals',
+          });
+        }
+
+        currentTime = nextArr;
+      }
+      admitArrivals(currentTime);
       continue;
     }
 
@@ -180,6 +183,7 @@ export function scheduleFCFS(inputProcesses, options = {}) {
         isContextSwitch: true,
       });
       for (let t = 0; t < cs; t++) {
+        admitArrivals(currentTime + t + 1);
         steps.push({
           time: currentTime + t,
           runningProcess: null,
@@ -205,17 +209,7 @@ export function scheduleFCFS(inputProcesses, options = {}) {
 
     for (let b = 0; b < burst; b++) {
       const stepTime = currentTime + b;
-      // Add any newly arrived processes to ready queue
-      procs.forEach((other) => {
-        if (
-          other.arrivalTime === stepTime &&
-          other.id !== p.id &&
-          !readyQueue.includes(other.id) &&
-          !completed.has(other.id)
-        ) {
-          readyQueue.push(other.id);
-        }
-      });
+      admitArrivals(stepTime + 1);
 
       steps.push({
         time: stepTime,
@@ -240,7 +234,7 @@ export function scheduleFCFS(inputProcesses, options = {}) {
  * Select process in ready queue with smallest burst time.
  */
 export function scheduleSJF(inputProcesses, options = {}) {
-  const cs = options.contextSwitch || 0;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
   const procs = inputProcesses.map((p) => p.clone());
   const timeline = [];
   const steps = [];
@@ -249,40 +243,49 @@ export function scheduleSJF(inputProcesses, options = {}) {
 
   const completed = new Set();
   const readyQueue = [];
+  const arrived = new Set();
 
-  while (completed.size < procs.length) {
-    // Add arrived
+  function admitArrivals(time) {
     procs.forEach((p) => {
-      if (p.arrivalTime <= currentTime && !readyQueue.includes(p.id) && !completed.has(p.id)) {
+      if (p.arrivalTime <= time && !arrived.has(p.id)) {
+        arrived.add(p.id);
         readyQueue.push(p.id);
       }
     });
+  }
+
+  admitArrivals(currentTime);
+
+  while (completed.size < procs.length) {
+    admitArrivals(currentTime);
 
     if (readyQueue.length === 0) {
-      const unarrived = procs.filter((p) => !completed.has(p.id));
+      const unarrived = procs.filter((p) => !arrived.has(p.id));
+      if (unarrived.length === 0) break;
+
       const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
-      const idleStart = currentTime;
-      const idleEnd = nextArr;
-
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: idleStart,
-        endTime: idleEnd,
-        isIdle: true,
-      });
-
-      for (let t = idleStart; t < idleEnd; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle',
+      if (nextArr > currentTime) {
+        timeline.push({
+          processId: null,
+          processName: 'IDLE',
+          startTime: currentTime,
+          endTime: nextArr,
+          isIdle: true,
         });
-      }
 
-      currentTime = nextArr;
+        for (let t = currentTime; t < nextArr; t++) {
+          steps.push({
+            time: t,
+            runningProcess: null,
+            readyQueue: [],
+            completedProcesses: Array.from(completed),
+            actionDescription: 'CPU Idle',
+          });
+        }
+
+        currentTime = nextArr;
+      }
+      admitArrivals(currentTime);
       continue;
     }
 
@@ -307,6 +310,7 @@ export function scheduleSJF(inputProcesses, options = {}) {
         isContextSwitch: true,
       });
       for (let t = 0; t < cs; t++) {
+        admitArrivals(currentTime + t + 1);
         steps.push({
           time: currentTime + t,
           runningProcess: null,
@@ -332,16 +336,7 @@ export function scheduleSJF(inputProcesses, options = {}) {
 
     for (let b = 0; b < burst; b++) {
       const stepTime = currentTime + b;
-      procs.forEach((other) => {
-        if (
-          other.arrivalTime === stepTime &&
-          other.id !== p.id &&
-          !readyQueue.includes(other.id) &&
-          !completed.has(other.id)
-        ) {
-          readyQueue.push(other.id);
-        }
-      });
+      admitArrivals(stepTime + 1);
 
       steps.push({
         time: stepTime,
@@ -365,7 +360,7 @@ export function scheduleSJF(inputProcesses, options = {}) {
  * Process with smallest remaining burst time is executed. Preemption occurs when newly arrived process has shorter burst.
  */
 export function scheduleSRTF(inputProcesses, options = {}) {
-  const cs = options.contextSwitch || 0;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
   const procs = inputProcesses.map((p) => p.clone());
   const timeline = [];
   const steps = [];
@@ -378,15 +373,13 @@ export function scheduleSRTF(inputProcesses, options = {}) {
   let runningId = null;
   let lastProcId = null;
 
-  // Max simulation time safeguard
   const totalWork = procs.reduce((acc, p) => acc + p.burstTime, 0);
-  const maxArr = Math.max(...procs.map((p) => p.arrivalTime));
-  const maxLimit = (totalWork + maxArr) * 3 + 100;
+  const maxArr = procs.length > 0 ? Math.max(...procs.map((p) => p.arrivalTime)) : 0;
+  const maxLimit = (totalWork + maxArr) * 4 + 200;
 
   let currentBlock = null;
 
   while (completed.size < procs.length && currentTime < maxLimit) {
-    // Identify ready processes
     const available = procs.filter((p) => p.arrivalTime <= currentTime && !completed.has(p.id));
 
     if (available.length === 0) {
@@ -394,28 +387,32 @@ export function scheduleSRTF(inputProcesses, options = {}) {
         timeline.push(currentBlock);
         currentBlock = null;
       }
-      const unarrived = procs.filter((p) => !completed.has(p.id));
+      const unarrived = procs.filter((p) => !completed.has(p.id) && p.arrivalTime > currentTime);
+      if (unarrived.length === 0) break;
+
       const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
 
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: currentTime,
-        endTime: nextArr,
-        isIdle: true,
-      });
-
-      for (let t = currentTime; t < nextArr; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle',
+      if (nextArr > currentTime) {
+        timeline.push({
+          processId: null,
+          processName: 'IDLE',
+          startTime: currentTime,
+          endTime: nextArr,
+          isIdle: true,
         });
-      }
 
-      currentTime = nextArr;
+        for (let t = currentTime; t < nextArr; t++) {
+          steps.push({
+            time: t,
+            runningProcess: null,
+            readyQueue: [],
+            completedProcesses: Array.from(completed),
+            actionDescription: 'CPU Idle',
+          });
+        }
+
+        currentTime = nextArr;
+      }
       runningId = null;
       continue;
     }
@@ -457,7 +454,6 @@ export function scheduleSRTF(inputProcesses, options = {}) {
     lastProcId = chosen.id;
     runningId = chosen.id;
 
-    // Timeline block accumulation
     if (!currentBlock || currentBlock.processId !== chosen.id) {
       if (currentBlock) {
         timeline.push(currentBlock);
@@ -473,7 +469,6 @@ export function scheduleSRTF(inputProcesses, options = {}) {
       currentBlock.endTime = currentTime + 1;
     }
 
-    // Ready queue snapshot (others currently available)
     const readyQ = available.filter((p) => p.id !== chosen.id).map((p) => p.id);
 
     steps.push({
@@ -508,7 +503,7 @@ export function scheduleSRTF(inputProcesses, options = {}) {
  */
 export function scheduleRoundRobin(inputProcesses, options = {}) {
   const quantum = Math.max(1, Number(options.quantum) || 4);
-  const cs = options.contextSwitch || 0;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
   const procs = inputProcesses.map((p) => p.clone());
   procs.sort((a, b) => a.arrivalTime - b.arrivalTime || a.id - b.id);
 
@@ -524,45 +519,51 @@ export function scheduleRoundRobin(inputProcesses, options = {}) {
   let currentTime = 0;
   let lastProcId = null;
 
-  // Add initial arrivals at t=0
-  procs.forEach((p) => {
-    if (p.arrivalTime <= currentTime && !arrived.has(p.id)) {
-      readyQueue.push(p.id);
-      arrived.add(p.id);
-    }
-  });
+  function admitArrivals(time) {
+    procs.forEach((p) => {
+      if (p.arrivalTime <= time && !arrived.has(p.id) && !completed.has(p.id)) {
+        arrived.add(p.id);
+        readyQueue.push(p.id);
+      }
+    });
+  }
+
+  admitArrivals(currentTime);
 
   while (completed.size < procs.length) {
+    admitArrivals(currentTime);
+
     if (readyQueue.length === 0) {
-      const unarrived = procs.filter((p) => !completed.has(p.id));
-      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
+      const unarrived = procs.filter((p) => !completed.has(p.id) && p.arrivalTime > currentTime);
+      if (unarrived.length === 0) {
+        admitArrivals(currentTime);
+        if (readyQueue.length === 0) break;
+      } else {
+        const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
+        if (nextArr > currentTime) {
+          timeline.push({
+            processId: null,
+            processName: 'IDLE',
+            startTime: currentTime,
+            endTime: nextArr,
+            isIdle: true,
+          });
 
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: currentTime,
-        endTime: nextArr,
-        isIdle: true,
-      });
+          for (let t = currentTime; t < nextArr; t++) {
+            steps.push({
+              time: t,
+              runningProcess: null,
+              readyQueue: [],
+              completedProcesses: Array.from(completed),
+              actionDescription: 'CPU Idle',
+            });
+          }
 
-      for (let t = currentTime; t < nextArr; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle',
-        });
-      }
-
-      currentTime = nextArr;
-      procs.forEach((p) => {
-        if (p.arrivalTime <= currentTime && !arrived.has(p.id)) {
-          readyQueue.push(p.id);
-          arrived.add(p.id);
+          currentTime = nextArr;
         }
-      });
-      continue;
+        admitArrivals(currentTime);
+        continue;
+      }
     }
 
     const currentId = readyQueue.shift();
@@ -578,6 +579,7 @@ export function scheduleRoundRobin(inputProcesses, options = {}) {
         isContextSwitch: true,
       });
       for (let t = 0; t < cs; t++) {
+        admitArrivals(currentTime + t + 1);
         steps.push({
           time: currentTime + t,
           runningProcess: null,
@@ -603,16 +605,10 @@ export function scheduleRoundRobin(inputProcesses, options = {}) {
 
     for (let u = 0; u < executeTime; u++) {
       const stepTime = currentTime + u;
-
-      // Check if other processes arrive during this time unit
-      procs.forEach((other) => {
-        if (other.arrivalTime === stepTime + 1 && !arrived.has(other.id)) {
-          readyQueue.push(other.id);
-          arrived.add(other.id);
-        }
-      });
-
       remaining[currentId] -= 1;
+
+      // Admit new arrivals during this unit BEFORE appending currentId to queue
+      admitArrivals(stepTime + 1);
 
       steps.push({
         time: stepTime,
@@ -629,7 +625,6 @@ export function scheduleRoundRobin(inputProcesses, options = {}) {
     if (remaining[currentId] === 0) {
       completed.add(currentId);
     } else {
-      // Put back to tail of ready queue
       readyQueue.push(currentId);
     }
   }
@@ -645,8 +640,8 @@ export function scheduleRoundRobin(inputProcesses, options = {}) {
  */
 export function schedulePriority(inputProcesses, options = {}) {
   const isPreemptive = Boolean(options.preemptive);
-  const cs = options.contextSwitch || 0;
-  const agingRate = Number(options.agingRate) || 0; // priority decrease (value -1) every X ms waiting
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
+  const agingRate = Number(options.agingRate) || 0;
   const procs = inputProcesses.map((p) => p.clone());
   const timeline = [];
   const steps = [];
@@ -665,39 +660,50 @@ export function schedulePriority(inputProcesses, options = {}) {
   let lastProcId = null;
 
   if (!isPreemptive) {
-    // Non-preemptive priority
     const readyQueue = [];
+    const arrived = new Set();
 
-    while (completed.size < procs.length) {
+    function admitArrivals(time) {
       procs.forEach((p) => {
-        if (p.arrivalTime <= currentTime && !readyQueue.includes(p.id) && !completed.has(p.id)) {
+        if (p.arrivalTime <= time && !arrived.has(p.id)) {
+          arrived.add(p.id);
           readyQueue.push(p.id);
         }
       });
+    }
+
+    admitArrivals(currentTime);
+
+    while (completed.size < procs.length) {
+      admitArrivals(currentTime);
 
       if (readyQueue.length === 0) {
-        const unarrived = procs.filter((p) => !completed.has(p.id));
+        const unarrived = procs.filter((p) => !arrived.has(p.id));
+        if (unarrived.length === 0) break;
+
         const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
-
-        timeline.push({
-          processId: null,
-          processName: 'IDLE',
-          startTime: currentTime,
-          endTime: nextArr,
-          isIdle: true,
-        });
-
-        for (let t = currentTime; t < nextArr; t++) {
-          steps.push({
-            time: t,
-            runningProcess: null,
-            readyQueue: [],
-            completedProcesses: Array.from(completed),
-            actionDescription: 'CPU Idle',
+        if (nextArr > currentTime) {
+          timeline.push({
+            processId: null,
+            processName: 'IDLE',
+            startTime: currentTime,
+            endTime: nextArr,
+            isIdle: true,
           });
-        }
 
-        currentTime = nextArr;
+          for (let t = currentTime; t < nextArr; t++) {
+            steps.push({
+              time: t,
+              runningProcess: null,
+              readyQueue: [],
+              completedProcesses: Array.from(completed),
+              actionDescription: 'CPU Idle',
+            });
+          }
+
+          currentTime = nextArr;
+        }
+        admitArrivals(currentTime);
         continue;
       }
 
@@ -724,6 +730,7 @@ export function schedulePriority(inputProcesses, options = {}) {
           isContextSwitch: true,
         });
         for (let t = 0; t < cs; t++) {
+          admitArrivals(currentTime + t + 1);
           steps.push({
             time: currentTime + t,
             runningProcess: null,
@@ -749,19 +756,8 @@ export function schedulePriority(inputProcesses, options = {}) {
 
       for (let b = 0; b < burst; b++) {
         const stepTime = currentTime + b;
+        admitArrivals(stepTime + 1);
 
-        procs.forEach((other) => {
-          if (
-            other.arrivalTime === stepTime &&
-            other.id !== p.id &&
-            !readyQueue.includes(other.id) &&
-            !completed.has(other.id)
-          ) {
-            readyQueue.push(other.id);
-          }
-        });
-
-        // Aging for processes in readyQueue
         if (agingRate > 0) {
           readyQueue.forEach((qId) => {
             waitingTracker[qId]++;
@@ -790,8 +786,8 @@ export function schedulePriority(inputProcesses, options = {}) {
     let runningId = null;
 
     const totalWork = procs.reduce((acc, p) => acc + p.burstTime, 0);
-    const maxArr = Math.max(...procs.map((p) => p.arrivalTime));
-    const maxLimit = (totalWork + maxArr) * 3 + 100;
+    const maxArr = procs.length > 0 ? Math.max(...procs.map((p) => p.arrivalTime)) : 0;
+    const maxLimit = (totalWork + maxArr) * 4 + 200;
 
     while (completed.size < procs.length && currentTime < maxLimit) {
       const available = procs.filter((p) => p.arrivalTime <= currentTime && !completed.has(p.id));
@@ -801,28 +797,32 @@ export function schedulePriority(inputProcesses, options = {}) {
           timeline.push(currentBlock);
           currentBlock = null;
         }
-        const unarrived = procs.filter((p) => !completed.has(p.id));
+        const unarrived = procs.filter((p) => !completed.has(p.id) && p.arrivalTime > currentTime);
+        if (unarrived.length === 0) break;
+
         const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
 
-        timeline.push({
-          processId: null,
-          processName: 'IDLE',
-          startTime: currentTime,
-          endTime: nextArr,
-          isIdle: true,
-        });
-
-        for (let t = currentTime; t < nextArr; t++) {
-          steps.push({
-            time: t,
-            runningProcess: null,
-            readyQueue: [],
-            completedProcesses: Array.from(completed),
-            actionDescription: 'CPU Idle',
+        if (nextArr > currentTime) {
+          timeline.push({
+            processId: null,
+            processName: 'IDLE',
+            startTime: currentTime,
+            endTime: nextArr,
+            isIdle: true,
           });
-        }
 
-        currentTime = nextArr;
+          for (let t = currentTime; t < nextArr; t++) {
+            steps.push({
+              time: t,
+              runningProcess: null,
+              readyQueue: [],
+              completedProcesses: Array.from(completed),
+              actionDescription: 'CPU Idle',
+            });
+          }
+
+          currentTime = nextArr;
+        }
         runningId = null;
         continue;
       }
@@ -880,7 +880,6 @@ export function schedulePriority(inputProcesses, options = {}) {
         currentBlock.endTime = currentTime + 1;
       }
 
-      // Aging for waiting processes
       if (agingRate > 0) {
         available.forEach((other) => {
           if (other.id !== chosen.id) {
@@ -923,13 +922,13 @@ export function schedulePriority(inputProcesses, options = {}) {
 }
 
 /**
- * 6. PRIORITY WITH ROUND-ROBIN FOR EQUAL PRIORITY (Slide 53-54)
- * System executes highest priority process.
- * If multiple processes share the highest priority, run them with Round-Robin quantum!
+ * 6. PRIORITY WITH ROUND-ROBIN FOR EQUAL PRIORITY
+ * Highest priority executed first. Equal priorities share CPU via Round Robin quantum.
+ * Preempts if a process with strictly higher priority arrives.
  */
 export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
   const quantum = Math.max(1, Number(options.quantum) || 2);
-  const cs = options.contextSwitch || 0;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
   const procs = inputProcesses.map((p) => p.clone());
   const timeline = [];
   const steps = [];
@@ -942,13 +941,11 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
   let currentTime = 0;
   let lastProcId = null;
 
-  // Track queue order per priority level
-  // priorityLevels: map of priority => [pids in arrival order]
   const priorityQueues = {};
 
   function updateArrivals(time) {
     procs.forEach((p) => {
-      if (p.arrivalTime <= time && !arrived.has(p.id)) {
+      if (p.arrivalTime <= time && !arrived.has(p.id) && !completed.has(p.id)) {
         arrived.add(p.id);
         if (!priorityQueues[p.priority]) priorityQueues[p.priority] = [];
         priorityQueues[p.priority].push(p.id);
@@ -959,35 +956,44 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
   updateArrivals(currentTime);
 
   while (completed.size < procs.length) {
-    // Find highest priority level that has active ready processes
+    updateArrivals(currentTime);
+
     const activePriorities = Object.keys(priorityQueues)
       .map(Number)
       .filter((pri) => priorityQueues[pri] && priorityQueues[pri].length > 0)
       .sort((a, b) => a - b);
 
     if (activePriorities.length === 0) {
-      const unarrived = procs.filter((p) => !completed.has(p.id));
-      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
-
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: currentTime,
-        endTime: nextArr,
-        isIdle: true,
-      });
-
-      for (let t = currentTime; t < nextArr; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle',
-        });
+      const unarrived = procs.filter((p) => !completed.has(p.id) && p.arrivalTime > currentTime);
+      if (unarrived.length === 0) {
+        updateArrivals(currentTime);
+        if (Object.keys(priorityQueues).some((pri) => priorityQueues[pri]?.length > 0)) continue;
+        break;
       }
 
-      currentTime = nextArr;
+      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
+
+      if (nextArr > currentTime) {
+        timeline.push({
+          processId: null,
+          processName: 'IDLE',
+          startTime: currentTime,
+          endTime: nextArr,
+          isIdle: true,
+        });
+
+        for (let t = currentTime; t < nextArr; t++) {
+          steps.push({
+            time: t,
+            runningProcess: null,
+            readyQueue: [],
+            completedProcesses: Array.from(completed),
+            actionDescription: 'CPU Idle',
+          });
+        }
+
+        currentTime = nextArr;
+      }
       updateArrivals(currentTime);
       continue;
     }
@@ -1007,6 +1013,7 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
         isContextSwitch: true,
       });
       for (let t = 0; t < cs; t++) {
+        updateArrivals(currentTime + t + 1);
         steps.push({
           time: currentTime + t,
           runningProcess: null,
@@ -1020,31 +1027,30 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
 
     lastProcId = currentId;
 
-    // Check how many processes share this priority
     const hasCompetitors = queue.length > 0;
-    // If only one process at this highest priority, it can run until quantum OR until finished
-    // According to slide 54: "when process P2 finishes at time 16, process P3 is highest priority, so it will run until completion"
-    const executeTime = hasCompetitors
-      ? Math.min(quantum, remaining[currentId])
-      : remaining[currentId];
-
+    const maxSlice = hasCompetitors ? quantum : remaining[currentId];
+    let executedInSlice = 0;
     const start = currentTime;
+    let preemptedByHigher = false;
 
-    timeline.push({
-      processId: p.id,
-      processName: p.name,
-      startTime: start,
-      endTime: start + executeTime,
-      isIdle: false,
-    });
+    while (executedInSlice < maxSlice && remaining[currentId] > 0) {
+      updateArrivals(currentTime + 1);
 
-    for (let u = 0; u < executeTime; u++) {
-      const stepTime = currentTime + u;
-      updateArrivals(stepTime + 1);
+      // Check if a process with HIGHER priority arrived
+      const curHigher = Object.keys(priorityQueues)
+        .map(Number)
+        .filter((pri) => pri < p.priority && priorityQueues[pri] && priorityQueues[pri].length > 0);
 
+      if (curHigher.length > 0) {
+        preemptedByHigher = true;
+        break;
+      }
+
+      const stepTime = currentTime;
       remaining[currentId] -= 1;
+      executedInSlice += 1;
+      currentTime += 1;
 
-      // Flatten ready queue for visualization
       const allReady = [];
       Object.keys(priorityQueues)
         .map(Number)
@@ -1059,17 +1065,28 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
         readyQueue: [...allReady],
         completedProcesses: Array.from(completed),
         remainingTime: { ...remaining },
-        actionDescription: `Executing ${p.name} (Pri=${p.priority}, ${hasCompetitors ? `RR slice ${u + 1}/${quantum}` : 'runs to completion'})`,
+        actionDescription: `Executing ${p.name} (Pri=${p.priority}, slice: ${executedInSlice}/${maxSlice})`,
       });
     }
 
-    currentTime += executeTime;
+    if (currentTime > start) {
+      timeline.push({
+        processId: p.id,
+        processName: p.name,
+        startTime: start,
+        endTime: currentTime,
+        isIdle: false,
+      });
+    }
 
     if (remaining[currentId] === 0) {
       completed.add(currentId);
     } else {
-      // Put back to tail of its priority queue
-      queue.push(currentId);
+      if (preemptedByHigher) {
+        queue.unshift(currentId);
+      } else {
+        queue.push(currentId);
+      }
     }
   }
 
@@ -1078,7 +1095,7 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
 }
 
 /**
- * 7. MULTILEVEL QUEUE SCHEDULING (MLQ) (Slides 55-60)
+ * 7. MULTILEVEL QUEUE SCHEDULING (MLQ)
  * Multiple queues statically assigned.
  * Default:
  * Queue 0: Highest priority (RR with quantum = 4)
@@ -1089,7 +1106,7 @@ export function schedulePriorityRoundRobin(inputProcesses, options = {}) {
 export function scheduleMultilevelQueue(inputProcesses, options = {}) {
   const q0Quantum = Number(options.q0Quantum) || 4;
   const q1Quantum = Number(options.q1Quantum) || 8;
-  const cs = options.contextSwitch || 0;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
   const procs = inputProcesses.map((p) => p.clone());
   const timeline = [];
   const steps = [];
@@ -1102,12 +1119,11 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
   let currentTime = 0;
   let lastProcId = null;
 
-  // Separate queues: 0, 1, 2
   const queues = { 0: [], 1: [], 2: [] };
 
   function updateArrivals(time) {
     procs.forEach((p) => {
-      if (p.arrivalTime <= time && !arrived.has(p.id)) {
+      if (p.arrivalTime <= time && !arrived.has(p.id) && !completed.has(p.id)) {
         arrived.add(p.id);
         const qIdx = Math.min(2, Math.max(0, p.queue || 0));
         queues[qIdx].push(p.id);
@@ -1118,6 +1134,8 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
   updateArrivals(currentTime);
 
   while (completed.size < procs.length) {
+    updateArrivals(currentTime);
+
     let chosenQ = -1;
     for (let q = 0; q <= 2; q++) {
       if (queues[q].length > 0) {
@@ -1127,29 +1145,37 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
     }
 
     if (chosenQ === -1) {
-      const unarrived = procs.filter((p) => !completed.has(p.id));
-      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
-
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: currentTime,
-        endTime: nextArr,
-        isIdle: true,
-      });
-
-      for (let t = currentTime; t < nextArr; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          queues: { 0: [...queues[0]], 1: [...queues[1]], 2: [...queues[2]] },
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle',
-        });
+      const unarrived = procs.filter((p) => !completed.has(p.id) && p.arrivalTime > currentTime);
+      if (unarrived.length === 0) {
+        updateArrivals(currentTime);
+        if ([0, 1, 2].some((q) => queues[q].length > 0)) continue;
+        break;
       }
 
-      currentTime = nextArr;
+      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
+
+      if (nextArr > currentTime) {
+        timeline.push({
+          processId: null,
+          processName: 'IDLE',
+          startTime: currentTime,
+          endTime: nextArr,
+          isIdle: true,
+        });
+
+        for (let t = currentTime; t < nextArr; t++) {
+          steps.push({
+            time: t,
+            runningProcess: null,
+            readyQueue: [],
+            queues: { 0: [...queues[0]], 1: [...queues[1]], 2: [...queues[2]] },
+            completedProcesses: Array.from(completed),
+            actionDescription: 'CPU Idle',
+          });
+        }
+
+        currentTime = nextArr;
+      }
       updateArrivals(currentTime);
       continue;
     }
@@ -1166,6 +1192,7 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
         isContextSwitch: true,
       });
       for (let t = 0; t < cs; t++) {
+        updateArrivals(currentTime + t + 1);
         steps.push({
           time: currentTime + t,
           runningProcess: null,
@@ -1181,12 +1208,12 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
     lastProcId = currentId;
 
     let quantum = chosenQ === 0 ? q0Quantum : chosenQ === 1 ? q1Quantum : remaining[currentId];
-    // Check preemption per 1 time unit if higher priority queue gets arrival
     let executed = 0;
     const start = currentTime;
 
     while (executed < quantum && remaining[currentId] > 0) {
-      // Check if a higher queue has arrived
+      updateArrivals(currentTime + 1);
+
       let higherArrival = false;
       for (let hq = 0; hq < chosenQ; hq++) {
         if (queues[hq].length > 0) {
@@ -1196,15 +1223,13 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
       }
 
       if (higherArrival) {
-        break; // Preempted by higher priority queue!
+        break;
       }
 
       const stepTime = currentTime;
       remaining[currentId] -= 1;
       executed += 1;
       currentTime += 1;
-
-      updateArrivals(currentTime);
 
       steps.push({
         time: stepTime,
@@ -1217,19 +1242,20 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
       });
     }
 
-    timeline.push({
-      processId: p.id,
-      processName: p.name,
-      startTime: start,
-      endTime: currentTime,
-      queueLevel: chosenQ,
-      isIdle: false,
-    });
+    if (currentTime > start) {
+      timeline.push({
+        processId: p.id,
+        processName: p.name,
+        startTime: start,
+        endTime: currentTime,
+        queueLevel: chosenQ,
+        isIdle: false,
+      });
+    }
 
     if (remaining[currentId] === 0) {
       completed.add(currentId);
     } else {
-      // Reinsert into tail of its assigned queue
       queues[chosenQ].push(currentId);
     }
   }
@@ -1239,20 +1265,20 @@ export function scheduleMultilevelQueue(inputProcesses, options = {}) {
 }
 
 /**
- * 8. MULTILEVEL FEEDBACK QUEUE (MLFQ) (Slides 61-65)
+ * 8. MULTILEVEL FEEDBACK QUEUE (MLFQ)
  * Dynamic process migration between queues:
- * - Queue 0: RR quantum = 8 (Slide 63)
- * - Queue 1: RR quantum = 16 (Slide 63)
- * - Queue 2: FCFS (Slide 63)
+ * - Queue 0: RR quantum = 8
+ * - Queue 1: RR quantum = 16
+ * - Queue 2: FCFS
  * Demotion upon quantum expiration.
  * Preemption: Q0 preempts Q1 & Q2; Q1 preempts Q2.
- * Starvation prevention: Aging moves long-waiting processes up!
+ * Starvation prevention: Aging moves long-waiting processes up.
  */
 export function scheduleMLFQ(inputProcesses, options = {}) {
   const q0Quantum = Number(options.q0Quantum) || 8;
   const q1Quantum = Number(options.q1Quantum) || 16;
-  const agingThreshold = Number(options.agingThreshold) || 30; // Aging promotion after waiting X ms
-  const cs = options.contextSwitch || 0;
+  const agingThreshold = Number(options.agingThreshold) || 30;
+  const cs = Math.max(0, Number(options.contextSwitch) || 0);
 
   const procs = inputProcesses.map((p) => p.clone());
   const timeline = [];
@@ -1264,7 +1290,7 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
 
   procs.forEach((p) => {
     remaining[p.id] = p.burstTime;
-    currentQueue[p.id] = 0; // all start in Q0
+    currentQueue[p.id] = 0;
     waitTimeInQueue[p.id] = 0;
   });
 
@@ -1277,7 +1303,7 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
 
   function updateArrivals(time) {
     procs.forEach((p) => {
-      if (p.arrivalTime <= time && !arrived.has(p.id)) {
+      if (p.arrivalTime <= time && !arrived.has(p.id) && !completed.has(p.id)) {
         arrived.add(p.id);
         queues[0].push(p.id);
         currentQueue[p.id] = 0;
@@ -1293,7 +1319,6 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
         const pid = q[i];
         waitTimeInQueue[pid]++;
         if (waitTimeInQueue[pid] >= agingThreshold) {
-          // Promote to higher queue!
           q.splice(i, 1);
           const newQ = qIdx - 1;
           queues[newQ].push(pid);
@@ -1307,6 +1332,8 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
   updateArrivals(currentTime);
 
   while (completed.size < procs.length) {
+    updateArrivals(currentTime);
+
     let chosenQ = -1;
     for (let q = 0; q <= 2; q++) {
       if (queues[q].length > 0) {
@@ -1316,29 +1343,37 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
     }
 
     if (chosenQ === -1) {
-      const unarrived = procs.filter((p) => !completed.has(p.id));
-      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
-
-      timeline.push({
-        processId: null,
-        processName: 'IDLE',
-        startTime: currentTime,
-        endTime: nextArr,
-        isIdle: true,
-      });
-
-      for (let t = currentTime; t < nextArr; t++) {
-        steps.push({
-          time: t,
-          runningProcess: null,
-          readyQueue: [],
-          queues: { 0: [...queues[0]], 1: [...queues[1]], 2: [...queues[2]] },
-          completedProcesses: Array.from(completed),
-          actionDescription: 'CPU Idle: Waiting for arrivals',
-        });
+      const unarrived = procs.filter((p) => !completed.has(p.id) && p.arrivalTime > currentTime);
+      if (unarrived.length === 0) {
+        updateArrivals(currentTime);
+        if ([0, 1, 2].some((q) => queues[q].length > 0)) continue;
+        break;
       }
 
-      currentTime = nextArr;
+      const nextArr = Math.min(...unarrived.map((p) => p.arrivalTime));
+
+      if (nextArr > currentTime) {
+        timeline.push({
+          processId: null,
+          processName: 'IDLE',
+          startTime: currentTime,
+          endTime: nextArr,
+          isIdle: true,
+        });
+
+        for (let t = currentTime; t < nextArr; t++) {
+          steps.push({
+            time: t,
+            runningProcess: null,
+            readyQueue: [],
+            queues: { 0: [...queues[0]], 1: [...queues[1]], 2: [...queues[2]] },
+            completedProcesses: Array.from(completed),
+            actionDescription: 'CPU Idle: Waiting for arrivals',
+          });
+        }
+
+        currentTime = nextArr;
+      }
       updateArrivals(currentTime);
       continue;
     }
@@ -1346,7 +1381,6 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
     const currentId = queues[chosenQ].shift();
     const p = procs.find((proc) => proc.id === currentId);
 
-    // Reset wait time since it's chosen to run
     waitTimeInQueue[currentId] = 0;
 
     if (cs > 0 && lastProcId !== null && lastProcId !== currentId) {
@@ -1358,6 +1392,8 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
         isContextSwitch: true,
       });
       for (let t = 0; t < cs; t++) {
+        updateArrivals(currentTime + t + 1);
+        applyAging();
         steps.push({
           time: currentTime + t,
           runningProcess: null,
@@ -1378,7 +1414,9 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
     let preemptedByHigher = false;
 
     while (executed < maxQuantum && remaining[currentId] > 0) {
-      // Check if higher queue has new arrival
+      updateArrivals(currentTime + 1);
+      applyAging();
+
       for (let hq = 0; hq < chosenQ; hq++) {
         if (queues[hq].length > 0) {
           preemptedByHigher = true;
@@ -1392,9 +1430,6 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
       executed += 1;
       currentTime += 1;
 
-      updateArrivals(currentTime);
-      applyAging();
-
       steps.push({
         time: stepTime,
         runningProcess: p.id,
@@ -1406,23 +1441,23 @@ export function scheduleMLFQ(inputProcesses, options = {}) {
       });
     }
 
-    timeline.push({
-      processId: p.id,
-      processName: p.name,
-      startTime: start,
-      endTime: currentTime,
-      queueLevel: chosenQ,
-      isIdle: false,
-    });
+    if (currentTime > start) {
+      timeline.push({
+        processId: p.id,
+        processName: p.name,
+        startTime: start,
+        endTime: currentTime,
+        queueLevel: chosenQ,
+        isIdle: false,
+      });
+    }
 
     if (remaining[currentId] === 0) {
       completed.add(currentId);
     } else {
       if (preemptedByHigher) {
-        // Preempted by arrival into higher queue: stays in current queue at head or tail
         queues[chosenQ].unshift(currentId);
       } else {
-        // Used full quantum: demote to next lower queue! (Slide 63)
         const nextQ = Math.min(2, chosenQ + 1);
         queues[nextQ].push(currentId);
         currentQueue[currentId] = nextQ;

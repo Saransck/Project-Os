@@ -22,6 +22,15 @@ export class UIController {
     this.processes = [];
     this.currentAlgorithm = 'FCFS';
     this.nextProcessId = 1;
+    this.onProcessChangeCallbacks = [];
+  }
+
+  onProcessChange(fn) {
+    this.onProcessChangeCallbacks.push(fn);
+  }
+
+  notifyProcessChange() {
+    this.onProcessChangeCallbacks.forEach((cb) => cb(this.processes));
   }
 
   initProcesses(initialList) {
@@ -42,6 +51,7 @@ export class UIController {
       queue: 0,
     });
     this.renderProcessTable();
+    this.notifyProcessChange();
   }
 
   removeProcess(id) {
@@ -51,6 +61,7 @@ export class UIController {
     }
     this.processes = this.processes.filter((p) => p.id !== id);
     this.renderProcessTable();
+    this.notifyProcessChange();
   }
 
   clearProcesses() {
@@ -117,10 +128,12 @@ export class UIController {
       el.addEventListener('change', (e) => {
         const id = Number(e.target.dataset.id);
         const field = e.target.dataset.field;
-        const val = Number(e.target.value);
+        let val = Number(e.target.value);
+        if (isNaN(val)) val = field === 'burstTime' ? 1 : 0;
         const targetProc = this.processes.find((p) => p.id === id);
         if (targetProc) {
           targetProc[field] = Math.max(field === 'burstTime' ? 1 : 0, val);
+          this.notifyProcessChange();
         }
       });
     });

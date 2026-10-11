@@ -50,8 +50,8 @@ export class GanttChartRenderer {
       return;
     }
 
-    this.timeline = result.timeline;
-    this.totalTime = result.totalTime || Math.max(...result.timeline.map((b) => b.endTime));
+    this.timeline = result.timeline.filter((b) => b.endTime > b.startTime);
+    this.totalTime = Math.max(1, result.totalTime || (this.timeline.length > 0 ? Math.max(...this.timeline.map((b) => b.endTime)) : 1));
 
     // Dynamic width calculation so it fills container or scrolls nicely
     const minWidth = Math.max(this.container.clientWidth || 600, this.totalTime * this.pixelsPerUnit);
@@ -83,6 +83,7 @@ export class GanttChartRenderer {
 
     this.timeline.forEach((block, index) => {
       const duration = block.endTime - block.startTime;
+      if (duration <= 0) return;
       const widthPct = (duration / this.totalTime) * 100;
       const leftPct = (block.startTime / this.totalTime) * 100;
 

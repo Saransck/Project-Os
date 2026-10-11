@@ -47,6 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sim.loadResult(result);
   }
 
+  // Hook UI process changes (add, delete, edit inputs) to re-simulate automatically
+  ui.onProcessChange(() => {
+    runSimulation();
+  });
+
   // Simulation Update Hook
   sim.onUpdate((state) => {
     ui.updateLiveStepView(state);
@@ -70,13 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Event Listeners: Process Management
   document.getElementById('btn-add-process')?.addEventListener('click', () => {
     ui.addProcess();
-    runSimulation();
   });
 
   document.getElementById('btn-clear-processes')?.addEventListener('click', () => {
     if (confirm('คุณต้องการล้างรายการ Process ทั้งหมดใช่หรือไม่?')) {
       ui.clearProcesses();
-      runSimulation();
     }
   });
 
@@ -214,13 +217,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-export-csv')?.addEventListener('click', () => {
     const result = ui.executeCurrentSchedule();
-    let csvContent = 'data:text/csv;charset=utf-8,Process,Arrival Time,Burst Time,Priority,Start Time,Completion Time,Turnaround Time,Waiting Time,Response Time\n';
+    let csvContent = '\uFEFFProcess,Arrival Time,Burst Time,Priority,Start Time,Completion Time,Turnaround Time,Waiting Time,Response Time\n';
     Object.values(result.processStats).forEach((p) => {
-      csvContent += `${p.name},${p.arrivalTime},${p.burstTime},${p.priority},${p.startTime},${p.completionTime},${p.turnaroundTime},${p.waitingTime},${p.responseTime}\n`;
+      csvContent += `"${p.name}",${p.arrivalTime},${p.burstTime},${p.priority},${p.startTime},${p.completionTime},${p.turnaroundTime},${p.waitingTime},${p.responseTime}\n`;
     });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const dlAnchor = document.createElement('a');
-    dlAnchor.setAttribute('href', encodeURI(csvContent));
+    dlAnchor.setAttribute('href', url);
     dlAnchor.setAttribute('download', `cpu_schedule_${ui.currentAlgorithm}.csv`);
     dlAnchor.click();
+    URL.revokeObjectURL(url);
   });
 });
