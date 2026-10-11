@@ -1,5 +1,6 @@
 /**
  * Main Application Coordinator
+ * Handles event wiring, themes, playback, zoom, scrubbing, formulas, and export.
  */
 
 import { UIController } from './ui.js';
@@ -15,9 +16,61 @@ document.addEventListener('DOMContentLoaded', () => {
   const tooltip = document.getElementById('gantt-tooltip');
   const gantt = new GanttChartRenderer(ganttContainer, tooltip);
 
-  // Initialize with SRTF Preemptive SJF preset by default
+  // 1. Theme Management (Cyber Dark, Midnight Blue, Clean Light)
+  const themes = [
+    {
+      id: 'dark',
+      label: 'Cyber Dark',
+      icon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+    },
+    {
+      id: 'midnight',
+      label: 'Midnight Blue',
+      icon: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+    },
+    {
+      id: 'light',
+      label: 'Clean Light',
+      icon: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+    },
+  ];
+
+  let currentThemeIdx = 0;
+  const savedTheme = localStorage.getItem('cpu_sim_theme');
+  if (savedTheme) {
+    const fIdx = themes.findIndex((t) => t.id === savedTheme);
+    if (fIdx !== -1) currentThemeIdx = fIdx;
+  }
+
+  function applyTheme(tObj) {
+    document.documentElement.setAttribute('data-theme', tObj.id);
+    const labelEl = document.getElementById('theme-label');
+    const iconEl = document.getElementById('theme-icon');
+    if (labelEl) labelEl.textContent = tObj.label;
+    if (iconEl) iconEl.innerHTML = tObj.icon;
+    localStorage.setItem('cpu_sim_theme', tObj.id);
+  }
+
+  applyTheme(themes[currentThemeIdx]);
+
+  document.getElementById('btn-theme-toggle')?.addEventListener('click', () => {
+    currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+    applyTheme(themes[currentThemeIdx]);
+  });
+
+  // 2. Preset Banner Updater
+  function updatePresetBanner(preset) {
+    const tagEl = document.getElementById('preset-desc-tag');
+    const textEl = document.getElementById('preset-desc-text');
+    if (!preset) return;
+    if (tagEl) tagEl.textContent = preset.algorithm;
+    if (textEl) textEl.textContent = preset.description || preset.name;
+  }
+
+  // 3. Initialize Default Workload (SRTF Preemptive)
   const defaultPreset = PRESETS.srtf_preemptive;
   ui.initProcesses(defaultPreset.processes);
+  updatePresetBanner(defaultPreset);
 
   // Populate Presets Select Dropdown
   const presetSelect = document.getElementById('preset-select');
@@ -39,12 +92,22 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.updateAlgorithmOptionsVisibility(defaultPreset.algorithm);
   }
 
-  // Run initial simulation
+  // 4. Run Simulation
   function runSimulation() {
     const result = ui.executeCurrentSchedule();
     ui.renderResults(result);
     gantt.render(result);
     sim.loadResult(result);
+
+    // Update scrubber bounds
+    const scrubber = document.getElementById('gantt-time-scrubber');
+    const scrubberVal = document.getElementById('scrubber-time-val');
+    if (scrubber && result) {
+      scrubber.min = 0;
+      scrubber.max = Math.max(1, result.summary.totalTime);
+      scrubber.value = 0;
+      if (scrubberVal) scrubberVal.textContent = 't = 0 ms';
+    }
   }
 
   // Hook UI process changes (add, delete, edit inputs) to re-simulate automatically
@@ -57,6 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.updateLiveStepView(state);
     if (state.currentStep) {
       gantt.updatePlayhead(state.currentStep.time);
+      const scrubber = document.getElementById('gantt-time-scrubber');
+      const scrubberVal = document.getElementById('scrubber-time-val');
+      if (scrubber && !scrubber.matches(':active')) {
+        scrubber.value = state.currentStep.time;
+      }
+      if (scrubberVal) {
+        scrubberVal.textContent = `t = ${state.currentStep.time} ms`;
+      }
     } else {
       gantt.updatePlayhead(null);
     }
@@ -72,7 +143,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Event Listeners: Process Management
+  // 5. Gantt Chart Zoom Controls
+  document.getElementById('btn-zoom-in')?.addEventListener('click', () => {
+    gantt.zoomIn();
+  });
+
+  document.getElementById('btn-zoom-out')?.addEventListener('click', () => {
+    gantt.zoomOut();
+  });
+
+  document.getElementById('btn-zoom-reset')?.addEventListener('click', () => {
+    gantt.resetZoom();
+  });
+
+  // 6. Gantt Timeline Scrubber Slider
+  const timeScrubber = document.getElementById('gantt-time-scrubber');
+  const scrubberVal = document.getElementById('scrubber-time-val');
+  timeScrubber?.addEventListener('input', (e) => {
+    const t = Number(e.target.value);
+    if (scrubberVal) scrubberVal.textContent = `t = ${t} ms`;
+    sim.jumpToTime(t);
+  });
+
+  // 7. Formula Breakdown Modal Controls
+  const formulaModal = document.getElementById('formula-modal');
+  document.getElementById('btn-show-formula')?.addEventListener('click', () => {
+    ui.showFormulaBreakdownModal();
+  });
+
+  document.getElementById('btn-close-formula-modal')?.addEventListener('click', () => {
+    formulaModal?.classList.remove('visible');
+  });
+
+  document.getElementById('btn-close-formula-footer')?.addEventListener('click', () => {
+    formulaModal?.classList.remove('visible');
+  });
+
+  formulaModal?.addEventListener('click', (e) => {
+    if (e.target === formulaModal) {
+      formulaModal.classList.remove('visible');
+    }
+  });
+
+  // 8. Event Listeners: Process Management
   document.getElementById('btn-add-process')?.addEventListener('click', () => {
     ui.addProcess();
   });
@@ -87,6 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const count = Number(prompt('ต้องการสุ่มจำนวน Process กี่ตัว? (3-8)', '5')) || 5;
     const randomList = generateRandomWorkload(Math.min(10, Math.max(2, count)));
     ui.initProcesses(randomList);
+    const tagEl = document.getElementById('preset-desc-tag');
+    const textEl = document.getElementById('preset-desc-text');
+    if (tagEl) tagEl.textContent = 'RANDOM';
+    if (textEl) textEl.textContent = `สุ่มชุดข้อมูล Process ใหม่จำนวน ${randomList.length} รายการ`;
     runSimulation();
   });
 
@@ -127,18 +244,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     ui.initProcesses(p.processes);
+    updatePresetBanner(p);
     runSimulation();
   });
 
   // Options input change
-  const optionInputs = ['input-quantum', 'input-context-switch', 'input-aging-rate', 'input-mlfq-q0', 'input-mlfq-q1', 'input-mlfq-aging'];
+  const optionInputs = [
+    'input-quantum',
+    'input-context-switch',
+    'input-aging-rate',
+    'input-mlfq-q0',
+    'input-mlfq-q1',
+    'input-mlfq-aging',
+  ];
   optionInputs.forEach((id) => {
     document.getElementById(id)?.addEventListener('change', () => {
       runSimulation();
     });
   });
 
-  // Playback Controls
+  // 9. Playback Controls
   document.getElementById('btn-play')?.addEventListener('click', () => {
     if (sim.isPlaying) {
       sim.pause();
@@ -171,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Trigger initial run
   runSimulation();
 
-  // Tab Switching
+  // 10. Tab Switching
   const tabSimBtn = document.getElementById('tab-btn-sim');
   const tabCompareBtn = document.getElementById('tab-btn-compare');
   const tabTheoryBtn = document.getElementById('tab-btn-theory');
@@ -206,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runComparison();
   });
 
-  // Export JSON / CSV
+  // 11. Export JSON / CSV
   document.getElementById('btn-export-json')?.addEventListener('click', () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(ui.processes, null, 2));
     const dlAnchor = document.createElement('a');
@@ -228,5 +353,28 @@ document.addEventListener('DOMContentLoaded', () => {
     dlAnchor.setAttribute('download', `cpu_schedule_${ui.currentAlgorithm}.csv`);
     dlAnchor.click();
     URL.revokeObjectURL(url);
+  });
+
+  // 12. Keyboard Shortcuts for Power Users
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+      return;
+    }
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (sim.isPlaying) sim.pause();
+      else sim.play();
+    } else if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      sim.stepForward();
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      sim.stepBackward();
+    } else if (e.code === 'KeyR') {
+      e.preventDefault();
+      sim.reset();
+    } else if (e.code === 'Escape') {
+      formulaModal?.classList.remove('visible');
+    }
   });
 });

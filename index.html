@@ -62,9 +62,15 @@
         </button>
       </nav>
 
-      <!-- Quick Actions Header -->
+      <!-- Quick Actions Header & Theme Toggle -->
       <div class="header-actions">
-        <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="ส่งออกผลลัพธ์เป็น CSV">
+        <button class="btn btn-secondary btn-sm" id="btn-theme-toggle" title="สลับธีมหน้าจอ (Dark / Midnight / Light)">
+          <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <span id="theme-label">Cyber Dark</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="ส่งออกผลลัพธ์เป็น CSV สำหรับ Excel">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export CSV
         </button>
@@ -96,6 +102,14 @@
             </button>
             <button class="btn btn-secondary btn-sm" id="btn-clear-processes">ล้างตาราง</button>
           </div>
+        </div>
+
+        <!-- Preset Description Info Banner -->
+        <div class="preset-desc-banner glass-panel" id="preset-desc-banner">
+          <div class="preset-desc-tag" id="preset-desc-tag">SRTF</div>
+          <p class="preset-desc-text" id="preset-desc-text">
+            Shortest Remaining Time First: Preemptive SJF จำลองการทำงานและวิเคราะห์เวลารอเฉลี่ย
+          </p>
         </div>
 
         <div class="simulation-grid">
@@ -239,14 +253,34 @@
                   </h2>
                   <span class="legend-hint">คลิกที่แท่งสีเพื่อกระโดดไปยังเวลานั้น</span>
                 </div>
-                <div class="gantt-legend-chips">
-                  <span class="legend-chip legend-idle">IDLE</span>
-                  <span class="legend-chip legend-cs">Context Switch</span>
+                <div class="gantt-header-right">
+                  <div class="zoom-toolbar">
+                    <button class="btn-zoom" id="btn-zoom-out" title="ย่อขนาด Gantt Chart (Zoom Out)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </button>
+                    <button class="btn-zoom-label" id="btn-zoom-reset" title="รีเซ็ตขนาดปกติ (100%)">100%</button>
+                    <button class="btn-zoom" id="btn-zoom-in" title="ขยายขนาด Gantt Chart (Zoom In)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </button>
+                  </div>
+                  <div class="gantt-legend-chips">
+                    <span class="legend-chip legend-idle">IDLE</span>
+                    <span class="legend-chip legend-cs">Context Switch</span>
+                  </div>
                 </div>
               </div>
               <div class="card-body p-4">
                 <div class="gantt-scroll-container" id="gantt-container">
                   <!-- Gantt bars rendered dynamically -->
+                </div>
+                <!-- Interactive Timeline Scrubber -->
+                <div class="timeline-scrubber-bar">
+                  <div class="scrubber-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>Timeline Scrubber:</span>
+                  </div>
+                  <input type="range" class="gantt-scrubber-slider" id="gantt-time-scrubber" min="0" max="100" value="0">
+                  <span class="scrubber-val font-mono" id="scrubber-time-val">t = 0 ms</span>
                 </div>
               </div>
             </div>
@@ -278,6 +312,17 @@
                   </div>
                   <div class="live-queue-belt" id="live-ready-queue">
                     <span class="empty-q-tag">Ready Queue ว่างเปล่า</span>
+                  </div>
+                </div>
+
+                <!-- Live Terminated Processes -->
+                <div class="hardware-term-box">
+                  <div class="hw-label">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Terminated (งานเสร็จสิ้น)
+                  </div>
+                  <div class="live-term-belt" id="live-terminated-list">
+                    <span class="empty-q-tag">ยังไม่มีงานเสร็จสิ้น</span>
                   </div>
                 </div>
               </div>
@@ -351,11 +396,15 @@
 
             <!-- Detailed Process Metrics Table -->
             <div class="card glass-panel" id="card-results-table">
-              <div class="card-header">
+              <div class="card-header flex-between">
                 <h2 class="card-title">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
                   ตารางสรุปผลการคำนวณราย Process (Scheduling Metrics)
                 </h2>
+                <button class="btn btn-secondary btn-sm" id="btn-show-formula" title="แสดงขั้นตอนและสูตรการคำนวณละเอียด">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                  ดูวิธีคำนวณสูตร (Formula Breakdown)
+                </button>
               </div>
               <div class="card-body p-0">
                 <div class="table-responsive">
@@ -398,6 +447,21 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/></svg>
             คำนวณใหม่ (Refresh)
           </button>
+        </div>
+
+        <!-- Benchmark Ranking Bar Chart Card -->
+        <div class="card glass-panel mb-6">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              การจัดอันดับเวลารอเฉลี่ย (Average Waiting Time Ranking)
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="benchmark-bars-container" id="comparison-bars-chart">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
         </div>
 
         <div class="card glass-panel mb-6">
@@ -515,6 +579,27 @@
 
     <!-- Global Floating Tooltip for Gantt -->
     <div class="gantt-tooltip" id="gantt-tooltip"></div>
+  </div>
+
+  <!-- Formula Breakdown Modal Dialog -->
+  <div class="modal-backdrop" id="formula-modal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <h3>วิธีคำนวณสูตรและขั้นตอนแจกแจงละเอียด</h3>
+        </div>
+        <button class="btn-icon" id="btn-close-formula-modal" aria-label="ปิดหน้าต่าง">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="formula-modal-content">
+        <!-- Rendered dynamically by UIController -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="btn-close-formula-footer">ปิดหน้าต่าง</button>
+      </div>
+    </div>
   </div>
 
   <!-- JavaScript Entry Point -->

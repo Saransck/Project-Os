@@ -1,6 +1,6 @@
 /**
  * Step-by-Step Simulation Controller
- * Manages simulation playback, speed, step forward/backward, and state events.
+ * Manages simulation playback, speed, step forward/backward, time scrubbing, and state events.
  */
 
 export class SimulationEngine {
@@ -8,7 +8,7 @@ export class SimulationEngine {
     this.currentStepIndex = 0;
     this.isPlaying = false;
     this.timer = null;
-    this.speed = 1.0; // 1x = 800ms per step
+    this.speed = 1.0; // 1x = 750ms per step
     this.result = null;
     this.onUpdateCallbacks = [];
     this.onCompleteCallbacks = [];
@@ -119,6 +119,23 @@ export class SimulationEngine {
     this.pause();
     if (!this.result || !this.result.steps) return;
     this.currentStepIndex = Math.max(0, Math.min(this.result.steps.length - 1, index));
+    this.notifyUpdate();
+  }
+
+  jumpToTime(targetTime) {
+    this.pause();
+    if (!this.result || !this.result.steps || this.result.steps.length === 0) return;
+    const target = Number(targetTime);
+    let bestIdx = 0;
+    let minDiff = Infinity;
+    this.result.steps.forEach((s, idx) => {
+      const diff = Math.abs(s.time - target);
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestIdx = idx;
+      }
+    });
+    this.currentStepIndex = bestIdx;
     this.notifyUpdate();
   }
 

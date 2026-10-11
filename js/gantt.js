@@ -1,6 +1,6 @@
 /**
  * Gantt Chart Renderer
- * Handles rendering the interactive Gantt chart, time ticks, playhead cursor, and tooltips.
+ * Handles rendering the interactive Gantt chart, time ticks, playhead cursor, zoom levels, and tooltips.
  */
 
 const PROCESS_COLORS = [
@@ -34,7 +34,9 @@ export class GanttChartRenderer {
     this.tooltip = tooltipElement;
     this.timeline = [];
     this.totalTime = 0;
-    this.pixelsPerUnit = 32; // base width per 1ms
+    this.basePixelsPerUnit = 32; // base width per 1ms
+    this.zoomMultiplier = 1.0;
+    this.currentResult = null;
     this.onBlockClickCallback = null;
   }
 
@@ -42,8 +44,24 @@ export class GanttChartRenderer {
     this.onBlockClickCallback = fn;
   }
 
+  zoomIn() {
+    this.zoomMultiplier = Math.min(3.0, Number((this.zoomMultiplier + 0.25).toFixed(2)));
+    if (this.currentResult) this.render(this.currentResult);
+  }
+
+  zoomOut() {
+    this.zoomMultiplier = Math.max(0.5, Number((this.zoomMultiplier - 0.25).toFixed(2)));
+    if (this.currentResult) this.render(this.currentResult);
+  }
+
+  resetZoom() {
+    this.zoomMultiplier = 1.0;
+    if (this.currentResult) this.render(this.currentResult);
+  }
+
   render(result) {
     if (!this.container) return;
+    this.currentResult = result;
     this.container.innerHTML = '';
     if (!result || !result.timeline || result.timeline.length === 0) {
       this.container.innerHTML = '<div class="empty-gantt">ไม่มีข้อมูลสำหรับสร้าง Gantt Chart</div>';
@@ -53,8 +71,10 @@ export class GanttChartRenderer {
     this.timeline = result.timeline.filter((b) => b.endTime > b.startTime);
     this.totalTime = Math.max(1, result.totalTime || (this.timeline.length > 0 ? Math.max(...this.timeline.map((b) => b.endTime)) : 1));
 
-    // Dynamic width calculation so it fills container or scrolls nicely
-    const minWidth = Math.max(this.container.clientWidth || 600, this.totalTime * this.pixelsPerUnit);
+    // Dynamic width calculation with zoom multiplier
+    const pxPerUnit = this.basePixelsPerUnit * this.zoomMultiplier;
+    const computedWidth = this.totalTime * pxPerUnit;
+    const minWidth = Math.max(this.container.clientWidth || 600, computedWidth);
 
     const chartWrapper = document.createElement('div');
     chartWrapper.className = 'gantt-wrapper';
@@ -97,22 +117,32 @@ export class GanttChartRenderer {
       blockEl.style.left = `${leftPct}%`;
       blockEl.style.width = `${widthPct}%`;
 
+      // Compact display if width is too narrow
+      const isNarrow = (duration * pxPerUnit) < 45;
+
       if (block.isIdle) {
         blockEl.classList.add('block-idle');
-        blockEl.innerHTML = `<span class="block-label">IDLE</span><span class="block-sub">${duration}ms</span>`;
+        blockEl.innerHTML = isNarrow
+          ? `<span class="block-label compact">IDLE</span>`
+          : `<span class="block-label">IDLE</span><span class="block-sub">${duration}ms</span>`;
       } else if (block.isContextSwitch) {
         blockEl.classList.add('block-cs');
-        blockEl.innerHTML = `<span class="block-label">CS</span>`;
+        blockEl.innerHTML = `<span class="block-label compact">CS</span>`;
       } else {
         const color = getProcessColor(block.processId);
         blockEl.style.background = color.bg;
         blockEl.style.borderColor = color.border;
         blockEl.style.color = color.text;
         const qBadge = block.queueLevel !== undefined ? `<small class="q-badge">Q${block.queueLevel}</small>` : '';
-        blockEl.innerHTML = `
-          <span class="block-label">${block.processName} ${qBadge}</span>
-          <span class="block-sub">${duration}ms</span>
-        `;
+
+        if (isNarrow) {
+          blockEl.innerHTML = `<span class="block-label compact">${block.processName}</span>`;
+        } else {
+          blockEl.innerHTML = `
+            <span class="block-label">${block.processName} ${qBadge}</span>
+            <span class="block-sub">${duration}ms</span>
+          `;
+        }
       }
 
       // Hover Tooltip Events
@@ -159,13 +189,13 @@ export class GanttChartRenderer {
 
   showTooltip(e, block, duration) {
     if (!this.tooltip) return;
-    const type = block.isIdle ? 'CPU Idle' : block.isContextSwitch ? 'Context Switch' : `Process ${block.processName}`;
-    const qInfo = block.queueLevel !== undefined ? `<p><strong>Queue:</strong> Q${block.queueLevel}</p>` : '';
+    const type = block.isIdle ? 'CPU Idle' : block.isContextSwitch ? 'Context Switch Overhead' : `Process ${block.processName}`;
+    const qInfo = block.queueLevel !== undefined ? `<p><strong>Queue:</strong> Level Q${block.queueLevel}</p>` : '';
 
     this.tooltip.innerHTML = `
       <div class="tooltip-header">${type}</div>
       <div class="tooltip-body">
-        <p><strong>ช่วงเวลา:</strong> [${block.startTime} → ${block.endTime}] ms</p>
+        <p><strong>ช่วงเวลา (Time):</strong> [${block.startTime} → ${block.endTime}] ms</p>
         <p><strong>ระยะเวลา (Duration):</strong> ${duration} ms</p>
         ${qInfo}
       </div>

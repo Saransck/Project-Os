@@ -22,6 +22,7 @@ export class UIController {
     this.processes = [];
     this.currentAlgorithm = 'FCFS';
     this.nextProcessId = 1;
+    this.latestResult = null;
     this.onProcessChangeCallbacks = [];
   }
 
@@ -84,7 +85,7 @@ export class UIController {
     if (priHeader) priHeader.style.display = showPriority ? '' : 'none';
     if (qHeader) qHeader.style.display = showQueue ? '' : 'none';
 
-    this.processes.forEach((p, index) => {
+    this.processes.forEach((p) => {
       const color = getProcessColor(p.id);
       const tr = document.createElement('tr');
       tr.id = `row-proc-${p.id}`;
@@ -139,7 +140,7 @@ export class UIController {
     });
 
     tbody.querySelectorAll('.btn-delete').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
         this.removeProcess(id);
       });
@@ -208,6 +209,7 @@ export class UIController {
 
   renderResults(result) {
     if (!result) return;
+    this.latestResult = result;
     const { processStats, summary } = result;
 
     // Summary Metric Cards
@@ -250,16 +252,30 @@ export class UIController {
       `;
       tbody.appendChild(tr);
     });
+
+    // Update scrubber bounds
+    const scrubber = document.getElementById('gantt-time-scrubber');
+    if (scrubber) {
+      scrubber.min = 0;
+      scrubber.max = summary.totalTime;
+      scrubber.value = 0;
+    }
   }
 
   updateLiveStepView(stepState) {
     if (!stepState) return;
-    const { currentStep, isPlaying, stepIndex, totalSteps, isFinished } = stepState;
+    const { currentStep, isPlaying, stepIndex, totalSteps } = stepState;
     if (!currentStep) return;
 
     // Time indicator
     const timeEl = document.getElementById('sim-current-time');
     if (timeEl) timeEl.textContent = `${currentStep.time} ms`;
+
+    // Scrubber slider sync
+    const scrubber = document.getElementById('gantt-time-scrubber');
+    if (scrubber && !scrubber.matches(':active')) {
+      scrubber.value = currentStep.time;
+    }
 
     // Step index
     const stepEl = document.getElementById('sim-step-index');
@@ -271,6 +287,15 @@ export class UIController {
       playBtn.innerHTML = isPlaying
         ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> พัก (Pause)`
         : `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> เล่น (Play)`;
+    }
+
+    // Highlight active row in table
+    document.querySelectorAll('#table-processes tbody tr').forEach((tr) => {
+      tr.classList.remove('running-row');
+    });
+    if (currentStep.runningProcess !== null && currentStep.runningProcess !== undefined) {
+      const activeRow = document.getElementById(`row-proc-${currentStep.runningProcess}`);
+      if (activeRow) activeRow.classList.add('running-row');
     }
 
     // CPU Core Status Card
@@ -310,7 +335,6 @@ export class UIController {
       queueContainer.innerHTML = '';
 
       if (currentStep.queues) {
-        // Multi-queue display for MLQ / MLFQ
         const wrapper = document.createElement('div');
         wrapper.className = 'mlq-queues-list';
 
@@ -330,7 +354,6 @@ export class UIController {
 
         queueContainer.appendChild(wrapper);
       } else {
-        // Single ready queue
         if (!currentStep.readyQueue || currentStep.readyQueue.length === 0) {
           queueContainer.innerHTML = '<span class="empty-q-tag">Ready Queue ว่างเปล่า</span>';
         } else {
@@ -347,6 +370,95 @@ export class UIController {
         }
       }
     }
+
+    // Live Terminated / Completed Processes Display
+    const termContainer = document.getElementById('live-terminated-list');
+    if (termContainer) {
+      termContainer.innerHTML = '';
+      if (!currentStep.completedProcesses || currentStep.completedProcesses.length === 0) {
+        termContainer.innerHTML = '<span class="empty-q-tag">ยังไม่มีงานเสร็จสิ้น</span>';
+      } else {
+        currentStep.completedProcesses.forEach((pid) => {
+          const pr = this.processes.find((p) => p.id === pid);
+          const clr = getProcessColor(pid);
+          const chip = document.createElement('div');
+          chip.className = 'term-chip';
+          chip.style.borderColor = clr.border;
+          chip.innerHTML = `<span class="term-dot">✓</span> ${pr ? pr.name : `P${pid}`}`;
+          termContainer.appendChild(chip);
+        });
+      }
+    }
+  }
+
+  showFormulaBreakdownModal() {
+    if (!this.latestResult) return;
+    const { processStats, summary } = this.latestResult;
+    const modal = document.getElementById('formula-modal');
+    const content = document.getElementById('formula-modal-content');
+    if (!modal || !content) return;
+
+    let rowsHtml = '';
+    const n = Object.keys(processStats).length;
+
+    Object.values(processStats).forEach((p) => {
+      rowsHtml += `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.completionTime} - ${p.arrivalTime} = <strong>${p.turnaroundTime} ms</strong></td>
+          <td>${p.turnaroundTime} - ${p.burstTime} = <strong>${p.waitingTime} ms</strong></td>
+          <td>${p.startTime} - ${p.arrivalTime} = <strong>${p.responseTime} ms</strong></td>
+        </tr>
+      `;
+    });
+
+    const sumWt = Object.values(processStats).reduce((acc, p) => acc + p.waitingTime, 0);
+    const sumTat = Object.values(processStats).reduce((acc, p) => acc + p.turnaroundTime, 0);
+    const sumRt = Object.values(processStats).reduce((acc, p) => acc + p.responseTime, 0);
+
+    content.innerHTML = `
+      <div class="modal-calc-header">
+        <h4>แจกแจงขั้นตอนและสูตรคำนวณอย่างละเอียด (${this.currentAlgorithm})</h4>
+      </div>
+      <div class="table-responsive mb-4">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>Turnaround Time (CT - AT)</th>
+              <th>Waiting Time (TAT - BT)</th>
+              <th>Response Time (First ST - AT)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="calc-summary-boxes">
+        <div class="calc-box">
+          <span class="calc-label">Average Waiting Time (AWT):</span>
+          <div class="calc-formula">
+            \\frac{\\sum WT}{n} = \\frac{${sumWt}}{${n}} = <strong>${summary.avgWaitingTime} ms</strong>
+          </div>
+        </div>
+        <div class="calc-box">
+          <span class="calc-label">Average Turnaround Time (ATAT):</span>
+          <div class="calc-formula">
+            \\frac{\\sum TAT}{n} = \\frac{${sumTat}}{${n}} = <strong>${summary.avgTurnaroundTime} ms</strong>
+          </div>
+        </div>
+        <div class="calc-box">
+          <span class="calc-label">Average Response Time (ART):</span>
+          <div class="calc-formula">
+            \\frac{\\sum RT}{n} = \\frac{${sumRt}}{${n}} = <strong>${summary.avgResponseTime} ms</strong>
+          </div>
+        </div>
+      </div>
+    `;
+
+    modal.classList.add('visible');
   }
 
   runComparison() {
@@ -373,10 +485,10 @@ export class UIController {
       };
     });
 
-    // Find winners
     const minWt = Math.min(...results.map((r) => r.avgWaitingTime));
     const minTat = Math.min(...results.map((r) => r.avgTurnaroundTime));
 
+    // Leaderboard table
     const tbody = document.getElementById('comparison-table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -404,7 +516,36 @@ export class UIController {
       tbody.appendChild(tr);
     });
 
-    // Render Mini Gantts
+    // Comparison Ranking Bars (Visual Chart)
+    const barChartContainer = document.getElementById('comparison-bars-chart');
+    if (barChartContainer) {
+      barChartContainer.innerHTML = '';
+      const maxWt = Math.max(...results.map((r) => r.avgWaitingTime), 1);
+
+      // Sort by waiting time ascending
+      const sortedResults = [...results].sort((a, b) => a.avgWaitingTime - b.avgWaitingTime);
+
+      sortedResults.forEach((item, idx) => {
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        const pct = Math.max(8, (item.avgWaitingTime / maxWt) * 100);
+
+        const barCard = document.createElement('div');
+        barCard.className = 'benchmark-bar-row';
+        barCard.innerHTML = `
+          <div class="benchmark-info">
+            <span class="benchmark-rank">${medal}</span>
+            <span class="benchmark-name">${item.algorithm}</span>
+            <span class="benchmark-val font-mono">${item.avgWaitingTime} ms</span>
+          </div>
+          <div class="benchmark-track">
+            <div class="benchmark-fill ${idx === 0 ? 'benchmark-gold' : ''}" style="width: ${pct}%"></div>
+          </div>
+        `;
+        barChartContainer.appendChild(barCard);
+      });
+    }
+
+    // Mini Gantts
     const miniContainer = document.getElementById('comparison-gantts-list');
     if (miniContainer) {
       miniContainer.innerHTML = '';
@@ -421,7 +562,7 @@ export class UIController {
         miniContainer.appendChild(card);
 
         const barWrapper = card.querySelector('.mini-gantt-bars');
-        const maxTime = item.res.totalTime;
+        const maxTime = Math.max(1, item.res.totalTime);
 
         item.res.timeline.forEach((blk) => {
           const wPct = ((blk.endTime - blk.startTime) / maxTime) * 100;
