@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPU Scheduling Simulator | ระบบจำลองการจัดตารางเวลาซีพียู (OS Chapter 4)</title>
+  <meta name="description" content="ระบบจำลองและวิเคราะห์ CPU Scheduling อัจฉริยะ (FCFS, SJF, SRTF, Round Robin, Priority, MLQ, MLFQ) พร้อม Gantt Chart แบบโต้ตอบและการเปรียบเทียบผลลัพธ์">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-layout" id="app-layout">
+    <!-- Top Navigation / Header -->
+    <header class="app-header" id="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <line x1="9" y1="1" x2="9" y2="4"/>
+            <line x1="15" y1="1" x2="15" y2="4"/>
+            <line x1="9" y1="20" x2="9" y2="23"/>
+            <line x1="15" y1="20" x2="15" y2="23"/>
+            <line x1="20" y1="9" x2="23" y2="9"/>
+            <line x1="20" y1="14" x2="23" y2="14"/>
+            <line x1="1" y1="9" x2="4" y2="9"/>
+            <line x1="1" y1="14" x2="4" y2="14"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">CPU Scheduling Simulator</h1>
+          <p class="brand-subtitle">Operating Systems (03603332) • Chapter 4 Silberschatz</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" id="main-nav-tabs">
+        <button class="nav-tab-btn active" id="tab-btn-sim">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          การจำลองแบบโต้ตอบ (Simulation)
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-compare">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          เปรียบเทียบอัลกอริทึม (Comparison)
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-theory">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          ทฤษฎีและสูตรคำนวณ (Theory)
+        </button>
+      </nav>
+
+      <!-- Quick Actions Header -->
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="ส่งออกผลลัพธ์เป็น CSV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-export-json" title="ส่งออกชุดข้อมูลเป็น JSON">
+          Export JSON
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main" id="app-main">
+      <!-- VIEW 1: INTERACTIVE SIMULATION -->
+      <section class="tab-view active" id="view-simulation">
+        <!-- Top Preset Bar -->
+        <div class="preset-toolbar glass-panel">
+          <div class="preset-left">
+            <label for="preset-select" class="toolbar-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              ตัวอย่างโจทย์ตามสไลด์:
+            </label>
+            <select class="custom-select" id="preset-select">
+              <!-- Dynamically populated from presets.js -->
+            </select>
+          </div>
+          <div class="preset-right">
+            <button class="btn btn-secondary btn-sm" id="btn-random-generate">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+              สุ่ม Process (Random)
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-clear-processes">ล้างตาราง</button>
+          </div>
+        </div>
+
+        <div class="simulation-grid">
+          <!-- LEFT COLUMN: Input Configuration & Settings -->
+          <div class="grid-left-col">
+            <!-- Algorithm Selection Card -->
+            <div class="card glass-panel" id="card-algorithm-settings">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  อัลกอริทึม & พารามิเตอร์
+                </h2>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="algorithm-select" class="form-label">เลือกอัลกอริทึม (Scheduling Algorithm):</label>
+                  <select class="custom-select custom-select-lg" id="algorithm-select">
+                    <optgroup label="Basic Algorithms">
+                      <option value="FCFS">First-Come, First-Served (FCFS)</option>
+                      <option value="SJF">Shortest-Job-First (SJF Non-preemptive)</option>
+                      <option value="SRTF" selected>Shortest Remaining Time First (SRTF Preemptive)</option>
+                      <option value="RR">Round-Robin (RR)</option>
+                    </optgroup>
+                    <optgroup label="Priority Scheduling">
+                      <option value="PRIORITY_NP">Priority (Non-preemptive)</option>
+                      <option value="PRIORITY_P">Priority (Preemptive)</option>
+                      <option value="PRIORITY_RR">Priority with Round-Robin (Equal Priority RR)</option>
+                    </optgroup>
+                    <optgroup label="Multilevel Queues">
+                      <option value="MLQ">Multilevel Queue (MLQ)</option>
+                      <option value="MLFQ">Multilevel Feedback Queue (MLFQ)</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <!-- Dynamic Parameters -->
+                <div class="options-grid">
+                  <!-- Time Quantum (For RR & Priority+RR) -->
+                  <div class="option-item" id="opt-quantum-group">
+                    <label for="input-quantum" class="form-label">Time Quantum ($q$):</label>
+                    <div class="input-with-unit">
+                      <input type="number" id="input-quantum" class="form-control" value="4" min="1" max="100">
+                      <span class="unit-tag">ms</span>
+                    </div>
+                  </div>
+
+                  <!-- Context Switch Overhead -->
+                  <div class="option-item" id="opt-cs-group">
+                    <label for="input-context-switch" class="form-label">Context Switch Overhead:</label>
+                    <div class="input-with-unit">
+                      <input type="number" id="input-context-switch" class="form-control" value="0" min="0" max="10">
+                      <span class="unit-tag">ms</span>
+                    </div>
+                  </div>
+
+                  <!-- Aging Rate (For Priority) -->
+                  <div class="option-item" id="opt-aging-group" style="display: none;">
+                    <label for="input-aging-rate" class="form-label">Aging Rate (ลด Priority ทุกๆ):</label>
+                    <div class="input-with-unit">
+                      <input type="number" id="input-aging-rate" class="form-control" value="0" min="0" max="50">
+                      <span class="unit-tag">ms (0=ปิด)</span>
+                    </div>
+                  </div>
+
+                  <!-- MLFQ Settings -->
+                  <div class="option-item col-span-2" id="opt-mlfq-group" style="display: none;">
+                    <div class="mlfq-sub-grid">
+                      <div>
+                        <label for="input-mlfq-q0" class="form-label">Queue 0 Quantum:</label>
+                        <div class="input-with-unit">
+                          <input type="number" id="input-mlfq-q0" class="form-control" value="8" min="1">
+                          <span class="unit-tag">ms</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label for="input-mlfq-q1" class="form-label">Queue 1 Quantum:</label>
+                        <div class="input-with-unit">
+                          <input type="number" id="input-mlfq-q1" class="form-control" value="16" min="1">
+                          <span class="unit-tag">ms</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label for="input-mlfq-aging" class="form-label">MLFQ Aging Threshold:</label>
+                        <div class="input-with-unit">
+                          <input type="number" id="input-mlfq-aging" class="form-control" value="25" min="0">
+                          <span class="unit-tag">ms</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Process Input Table Card -->
+            <div class="card glass-panel" id="card-processes">
+              <div class="card-header flex-between">
+                <h2 class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  รายการ Process (Workload)
+                </h2>
+                <button class="btn btn-primary btn-sm" id="btn-add-process" title="เพิ่ม Process ใหม่">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  เพิ่ม Process
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="data-table" id="table-processes">
+                    <thead>
+                      <tr>
+                        <th>Process</th>
+                        <th>Arrival (ms)</th>
+                        <th>Burst (ms)</th>
+                        <th id="th-priority">Priority</th>
+                        <th id="th-queue" style="display: none;">Queue</th>
+                        <th style="width: 48px;"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="process-table-body">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-footer-note">
+                  <small>* ค่า Priority ยิ่งน้อย = ความสำคัญยิ่งสูง (เช่น 0 หรือ 1 คือ Priority สูงสุด ตามสไลด์)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Simulation Playback, Gantt Chart, State, Metrics -->
+          <div class="grid-right-col">
+            <!-- Gantt Chart Card -->
+            <div class="card glass-panel" id="card-gantt">
+              <div class="card-header flex-between">
+                <div class="gantt-title-wrap">
+                  <h2 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Gantt Chart (แผนภูมิแกนต์)
+                  </h2>
+                  <span class="legend-hint">คลิกที่แท่งสีเพื่อกระโดดไปยังเวลานั้น</span>
+                </div>
+                <div class="gantt-legend-chips">
+                  <span class="legend-chip legend-idle">IDLE</span>
+                  <span class="legend-chip legend-cs">Context Switch</span>
+                </div>
+              </div>
+              <div class="card-body p-4">
+                <div class="gantt-scroll-container" id="gantt-container">
+                  <!-- Gantt bars rendered dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Live CPU & Ready Queue Hardware Card -->
+            <div class="card glass-panel" id="card-live-hardware">
+              <div class="hardware-grid">
+                <!-- CPU Core State -->
+                <div class="hardware-core-box">
+                  <div class="hw-label">
+                    <span class="pulse-dot"></span> CPU Core (1 Core)
+                  </div>
+                  <div class="cpu-core idle-cpu" id="cpu-status-indicator">
+                    <div class="cpu-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+                    </div>
+                    <div class="cpu-details">
+                      <span class="cpu-proc-name" id="cpu-running-name">IDLE</span>
+                      <small class="cpu-action-text" id="cpu-action-desc">รอเริ่มการจำลอง...</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Live Ready Queue -->
+                <div class="hardware-queue-box">
+                  <div class="hw-label">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    Ready Queue (คิวรอประมวลผล)
+                  </div>
+                  <div class="live-queue-belt" id="live-ready-queue">
+                    <span class="empty-q-tag">Ready Queue ว่างเปล่า</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Playback Controls Bar -->
+              <div class="playback-bar">
+                <div class="playback-controls">
+                  <button class="btn btn-secondary btn-icon-round" id="btn-reset" title="รีเซ็ต (Reset)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/></svg>
+                  </button>
+                  <button class="btn btn-secondary btn-icon-round" id="btn-step-backward" title="ถอยหลัง 1 ก้าว">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                  </button>
+                  <button class="btn btn-primary" id="btn-play">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    เล่น (Play)
+                  </button>
+                  <button class="btn btn-secondary btn-icon-round" id="btn-step-forward" title="ไปข้างหน้า 1 ก้าว">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                  </button>
+                </div>
+
+                <div class="playback-speed">
+                  <label for="sim-speed-slider" class="speed-label">ความเร็ว:</label>
+                  <input type="range" id="sim-speed-slider" min="0.2" max="4.0" step="0.2" value="1.0">
+                  <span class="speed-val" id="sim-speed-val">1.0x</span>
+                </div>
+
+                <div class="playback-status">
+                  <span class="time-pill">
+                    เวลา <strong id="sim-current-time">0 ms</strong>
+                  </span>
+                  <span class="step-pill" id="sim-step-index">Step 1 / 1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key Performance Metrics (KPI Cards) -->
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <span class="metric-title">Average Waiting Time</span>
+                <span class="metric-value font-mono" id="metric-avg-wt">0.00 ms</span>
+                <span class="metric-desc">เวลาเฉลี่ยที่รอใน Ready Queue</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">Avg Turnaround Time</span>
+                <span class="metric-value font-mono" id="metric-avg-tat">0.00 ms</span>
+                <span class="metric-desc">เวลาทั้งหมดตั้งแต่เข้าสู่ระบบจนเสร็จ</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">Avg Response Time</span>
+                <span class="metric-value font-mono" id="metric-avg-rt">0.00 ms</span>
+                <span class="metric-desc">เวลาตั้งแต่เข้ามาจน CPU ตอบสนองครั้งแรก</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">CPU Utilization</span>
+                <span class="metric-value font-mono" id="metric-cpu-util">100.0%</span>
+                <span class="metric-desc">อัตราส่วนเวลาที่ CPU ทำงาน</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">Throughput</span>
+                <span class="metric-value font-mono" id="metric-throughput">0.000 /ms</span>
+                <span class="metric-desc">จำนวนงานที่เสร็จต่อหน่วยเวลา</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">Total Simulation Time</span>
+                <span class="metric-value font-mono" id="metric-total-time">0 ms</span>
+                <span class="metric-desc">เวลาสิ้นสุดของ Process ตัวสุดท้าย</span>
+              </div>
+            </div>
+
+            <!-- Detailed Process Metrics Table -->
+            <div class="card glass-panel" id="card-results-table">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                  ตารางสรุปผลการคำนวณราย Process (Scheduling Metrics)
+                </h2>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="data-table" id="table-results">
+                    <thead>
+                      <tr>
+                        <th>Process</th>
+                        <th>Arrival (AT)</th>
+                        <th>Burst (BT)</th>
+                        <th>Priority</th>
+                        <th>Start (ST)</th>
+                        <th>Finish (CT)</th>
+                        <th>Turnaround (TAT)</th>
+                        <th>Waiting (WT)</th>
+                        <th>Response (RT)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="results-table-body">
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-footer-formula">
+                  <span><strong>สูตรคำนวณ:</strong> TAT = CT - AT | WT = TAT - BT | RT = First ST - AT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: ALGORITHM COMPARISON -->
+      <section class="tab-view" id="view-comparison">
+        <div class="comparison-header-card glass-panel">
+          <div class="comp-title-wrap">
+            <h2>เปรียบเทียบอัลกอริทึมทั้งหมดบนชุดข้อมูลเดียวกัน (Algorithm Benchmark)</h2>
+            <p>ประมวลผลอัลกอริทึมทั้ง 8 รูปแบบพร้อมกันด้วย Process ชุดปัจจุบัน เพื่อเปรียบเทียบค่า Waiting Time และ Turnaround Time</p>
+          </div>
+          <button class="btn btn-primary" id="btn-refresh-compare">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/></svg>
+            คำนวณใหม่ (Refresh)
+          </button>
+        </div>
+
+        <div class="card glass-panel mb-6">
+          <div class="card-header">
+            <h3 class="card-title">ตารางเปรียบเทียบประสิทธิภาพ (Comparison Leaderboard)</h3>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="data-table" id="table-comparison">
+                <thead>
+                  <tr>
+                    <th>อัลกอริทึม (Algorithm)</th>
+                    <th>Average Waiting Time (WT)</th>
+                    <th>Average Turnaround Time (TAT)</th>
+                    <th>Average Response Time (RT)</th>
+                    <th>CPU Utilization</th>
+                    <th>Throughput</th>
+                    <th>Total Time</th>
+                  </tr>
+                </thead>
+                <tbody id="comparison-table-body">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparative Stacked Gantt Charts -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h3 class="card-title">เปรียบเทียบ Gantt Chart แต่ละอัลกอริทึมแบบเคียงข้าง (Visual Comparison)</h3>
+          </div>
+          <div class="card-body">
+            <div class="mini-gantts-list" id="comparison-gantts-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: THEORY & FORMULAS (Course Knowledge) -->
+      <section class="tab-view" id="view-theory">
+        <div class="theory-grid">
+          <!-- Theory Card 1: Criteria -->
+          <div class="card glass-panel">
+            <div class="card-header">
+              <h3 class="card-title">1. เกณฑ์การจัดตารางเวลา (Scheduling Criteria - สไลด์หน้า 18-21)</h3>
+            </div>
+            <div class="card-body theory-content">
+              <ul>
+                <li><strong>CPU Utilization:</strong> เปอร์เซ็นต์ที่ CPU ใช้งานจริง ไม่ว่างเปล่า (เป้าหมาย 40% - 90%)</li>
+                <li><strong>Throughput:</strong> จำนวน Process ที่เสร็จสิ้นต่อหน่วยเวลา</li>
+                <li><strong>Turnaround Time (TAT):</strong> เวลาตั้งแต่ส่ง Process เข้ามา ($AT$) จนประมวลผลเสร็จสิ้น ($CT$):
+                  <div class="formula-box">$$TAT = CT - AT$$</div>
+                </li>
+                <li><strong>Waiting Time (WT):</strong> เวลารวมที่ Process ต้องรออยู่ใน Ready Queue:
+                  <div class="formula-box">$$WT = TAT - BT$$</div>
+                </li>
+                <li><strong>Response Time (RT):</strong> เวลาตั้งแต่ส่ง Process เข้ามา จนถึงเริ่มได้รับการประมวลผลครั้งแรก ($ST_{first}$):
+                  <div class="formula-box">$$RT = ST_{first} - AT$$</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Theory Card 2: Preemptive vs Nonpreemptive -->
+          <div class="card glass-panel">
+            <div class="card-header">
+              <h3 class="card-title">2. Preemptive vs Non-preemptive (สไลด์หน้า 7-12)</h3>
+            </div>
+            <div class="card-body theory-content">
+              <p>การตัดสินใจจัดตารางเวลาของ CPU เกิดขึ้นได้ 4 กรณี:</p>
+              <ol>
+                <li>Process เปลี่ยนจาก Running &rarr; Waiting (เช่น ขอ I/O)</li>
+                <li>Process เปลี่ยนจาก Running &rarr; Ready (เช่น ถูก Interrupt หรือหมด Time Quantum)</li>
+                <li>Process เปลี่ยนจาก Waiting &rarr; Ready (เช่น I/O เสร็จสิ้น)</li>
+                <li>Process จบการทำงาน (Terminates)</li>
+              </ol>
+              <p><strong>Non-preemptive:</strong> ตัดสินใจเฉพาะข้อ 1 และ 4 เท่านั้น เมื่อได้ CPU แล้วจะรันจนกว่าจะยอมปล่อยเอง</p>
+              <p><strong>Preemptive:</strong> สามารถแย่ง CPU คืนได้ในข้อ 2 และ 3 ทันทีที่ Process สำคัญกว่าหรือมี Burst สั้นกว่าเข้ามา</p>
+            </div>
+          </div>
+
+          <!-- Theory Card 3: Convoy Effect & SJF Optimality -->
+          <div class="card glass-panel">
+            <div class="card-header">
+              <h3 class="card-title">3. Convoy Effect & SJF Optimality (สไลด์หน้า 27, 31)</h3>
+            </div>
+            <div class="card-body theory-content">
+              <p><strong>Convoy Effect (ใน FCFS):</strong> เมื่อ Process งานยาว (CPU-bound) ได้เข้าทำก่อน ทำให้ Process งานสั้นๆ (I/O-bound) ต้องต่อคิวนาน ส่งผลให้ค่า Average Waiting Time พุ่งสูงมาก และ I/O devices ว่างเปล่า</p>
+              <p><strong>SJF Is Provably Optimal:</strong> การนำงานสั้นมาทำก่อนให้ผลลัพธ์ Average Waiting Time ที่ <em>ต่ำที่สุดในเชิงทฤษฎี</em> เสมอ เพราะลดเวลารอของงานสั้นได้มากกว่าการเพิ่มเวลารอของงานยาว</p>
+            </div>
+          </div>
+
+          <!-- Theory Card 4: MLFQ Design & Starvation Prevention -->
+          <div class="card glass-panel">
+            <div class="card-header">
+              <h3 class="card-title">4. MLFQ & Aging (สไลด์หน้า 51-52, 61-65)</h3>
+            </div>
+            <div class="card-body theory-content">
+              <p><strong>Indefinite Blocking / Starvation:</strong> Process ความสำคัญต่ำอาจไม่ได้รันเลยหากมีงานที่มี Priority สูงเข้ามาเรื่อยๆ</p>
+              <p><strong>Aging Solution:</strong> เพิ่มระดับ Priority ให้ Process ที่รอนานขึ้นเรื่อยๆ ตามกาลเวลา จนกลายเป็นงานสำคัญที่สุด</p>
+              <p><strong>Multilevel Feedback Queue (MLFQ):</strong>
+                <br>• Queue 0: Round Robin ($q=8$ ms)
+                <br>• Queue 1: Round Robin ($q=16$ ms)
+                <br>• Queue 2: FCFS
+                <br><em>Process ใหม่เข้า Q0 หากใช้ CPU เกิน Quantum จะถูกลดระดับลงไปคิวล่าง!</em>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Global Floating Tooltip for Gantt -->
+    <div class="gantt-tooltip" id="gantt-tooltip"></div>
+  </div>
+
+  <!-- JavaScript Entry Point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
