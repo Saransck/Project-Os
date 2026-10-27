@@ -1,599 +1,3363 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en" data-theme="dark">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CPU Scheduling Simulator | ระบบจำลองการจัดตารางเวลาซีพียู (OS Chapter 4)</title>
-  <meta name="description" content="ระบบจำลองและวิเคราะห์ CPU Scheduling อัจฉริยะ (FCFS, SJF, SRTF, Round Robin, Priority, MLQ, MLFQ) พร้อม Gantt Chart แบบโต้ตอบและการเปรียบเทียบผลลัพธ์">
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduling Simulator — OS Chapter 4</title>
+    <meta name="description"
+        content="Interactive CPU Scheduling Simulator — FCFS, SJF, SRTF, Round Robin, Priority, Priority + RR with animated Gantt charts, real ready-queue visualization, and side-by-side comparison. English / Thai.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ══════════════════════════════════════════════════════════════
+       1. DESIGN TOKENS — DARK THEME (default)
+       ══════════════════════════════════════════════════════════════ */
+        :root,
+        [data-theme="dark"] {
+            --bg-primary: #070d19;
+            --bg-secondary: #0c1628;
+            --bg-card: #101f37;
+            --bg-card-hover: #162a4a;
+            --bg-input: #091322;
+            --border: rgba(14, 165, 233, 0.18);
+            --border-glow: rgba(14, 165, 233, 0.45);
+            --text-1: #e2f1fc;
+            --text-2: #8da4c4;
+            --text-3: #536b8e;
+            --indigo: #0ea5e9;
+            --violet: #38bdf8;
+            --cyan: #06b6d4;
+            --amber: #f59e0b;
+            --emerald: #10b981;
+            --red: #ef4444;
+            --pink: #ec4899;
+            --teal: #14b8a6;
+            --orange: #f97316;
+            --blue: #0284c7;
+            --grad-main: linear-gradient(135deg, #0284c7, #0ea5e9, #38bdf8);
+            --grad-warm: linear-gradient(135deg, var(--amber), var(--red));
+            --grad-cool: linear-gradient(135deg, var(--cyan), var(--emerald));
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 30px rgba(14, 165, 233, 0.18);
+            --r-sm: 8px;
+            --r-md: 12px;
+            --r-lg: 16px;
+            --r-xl: 24px;
+            --t-fast: 0.15s ease;
+            --t-normal: 0.3s ease;
+            --t-slow: 0.5s ease;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       1b. LIGHT THEME
+       ══════════════════════════════════════════════════════════════ */
+        [data-theme="light"] {
+            --bg-primary: #f0f7ff;
+            --bg-secondary: #e2effe;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f8ff;
+            --bg-input: #f0f6fc;
+            --border: rgba(14, 165, 233, 0.22);
+            --border-glow: rgba(14, 165, 233, 0.45);
+            --text-1: #0f172a;
+            --text-2: #334155;
+            --text-3: #64748b;
+            --shadow-sm: 0 2px 8px rgba(14, 165, 233, 0.06);
+            --shadow-md: 0 4px 20px rgba(14, 165, 233, 0.08);
+            --shadow-lg: 0 8px 40px rgba(14, 165, 233, 0.12);
+            --shadow-glow: 0 0 30px rgba(14, 165, 233, 0.12);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       2. RESET & BASE
+       ══════════════════════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-1);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(14, 165, 233, 0.07) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        [data-theme="light"] body::before {
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.04) 0%, transparent 50%);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.35);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.6);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       3. LAYOUT
+       ══════════════════════════════════════════════════════════════ */
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       4. THEME TOGGLE
+       ══════════════════════════════════════════════════════════════ */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 52px;
+            height: 28px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: var(--t-normal);
+            display: flex;
+            align-items: center;
+            padding: 0 3px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .theme-toggle__knob {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--grad-main);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        [data-theme="light"] .theme-toggle__knob {
+            transform: translateX(24px);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       5. HEADER
+       ══════════════════════════════════════════════════════════════ */
+        .header {
+            text-align: center;
+            padding: 24px 20px 16px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 2px;
+            background: var(--grad-main);
+            border-radius: 2px;
+        }
+
+        .header__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            border-radius: 100px;
+            padding: 6px 18px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--indigo);
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .header__badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--emerald);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.3);
+            }
+        }
+
+        .header__title {
+            font-size: clamp(1.4rem, 2.6vw, 1.95rem);
+            font-weight: 800;
+            background: var(--grad-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 14px;
+            letter-spacing: -0.5px;
+        }
+
+        .header__desc {
+            color: var(--text-2);
+            font-size: 1.05rem;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .header__sub {
+            font-size: 0.82rem;
+            color: var(--text-3);
+            margin-top: 8px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       6. SECTION TITLE
+       ══════════════════════════════════════════════════════════════ */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .section-title__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--r-sm);
+            background: rgba(14, 165, 233, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .section-title__text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-1);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       7. CARD
+       ══════════════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 28px;
+            margin-bottom: 24px;
+            transition: var(--t-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--grad-main);
+            opacity: 0;
+            transition: var(--t-normal);
+        }
+
+        .card:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       8. FORM ELEMENTS
+       ══════════════════════════════════════════════════════════════ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-2);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .form-control {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            padding: 12px 16px;
+            color: var(--text-1);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--t-fast);
+        }
+
+        .form-control:focus {
+            border-color: var(--indigo);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-3);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       9. BUTTONS
+       ══════════════════════════════════════════════════════════════ */
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--r-sm);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--t-normal);
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn--primary {
+            background: var(--grad-main);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+        }
+
+        .btn--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(14, 165, 233, 0.5);
+        }
+
+        .btn--secondary {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            color: var(--indigo);
+        }
+
+        .btn--secondary:hover {
+            background: rgba(14, 165, 233, 0.18);
+            border-color: var(--indigo);
+        }
+
+        .btn--accent {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            color: var(--cyan);
+        }
+
+        .btn--accent:hover {
+            background: rgba(6, 182, 212, 0.18);
+            border-color: var(--cyan);
+        }
+
+        .btn--warn {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: var(--amber);
+        }
+
+        .btn--warn:hover {
+            background: rgba(245, 158, 11, 0.18);
+        }
+
+        .btn--remove {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--red);
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: var(--t-fast);
+        }
+
+        .btn--remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--red);
+        }
+
+        .btn--green {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: var(--emerald);
+        }
+
+        .btn--green:hover {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: var(--emerald);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       10. PRESETS
+       ══════════════════════════════════════════════════════════════ */
+        .preset-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .preset-chip {
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--t-fast);
+            background: rgba(14, 165, 233, 0.09);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            color: var(--indigo);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .preset-chip:hover {
+            background: rgba(14, 165, 233, 0.2);
+            border-color: var(--indigo);
+            transform: translateY(-1px);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       11. TABLES
+       ══════════════════════════════════════════════════════════════ */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        .tbl {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.92rem;
+        }
+
+        .tbl th {
+            background: rgba(14, 165, 233, 0.08);
+            color: var(--text-2);
+            font-weight: 600;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tbl th:first-child {
+            border-radius: var(--r-sm) 0 0 0;
+        }
+
+        .tbl th:last-child {
+            border-radius: 0 var(--r-sm) 0 0;
+        }
+
+        .tbl td {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.06);
+            font-family: 'JetBrains Mono', monospace;
+            vertical-align: middle;
+        }
+
+        .tbl tr:hover td {
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        .tbl--results th {
+            text-align: center;
+        }
+
+        .tbl--results td {
+            text-align: center;
+        }
+
+        .tbl--results .avg-row td {
+            background: rgba(14, 165, 233, 0.08);
+            font-weight: 700;
+            color: var(--indigo);
+            border-top: 2px solid var(--indigo);
+        }
+
+        .dot-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       12. GANTT CHART
+       ══════════════════════════════════════════════════════════════ */
+        .gantt {
+            margin: 20px 0;
+            padding: 24px;
+            background: var(--bg-input);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .gantt__label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-2);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .gantt__track {
+            display: flex;
+            align-items: stretch;
+            min-height: 52px;
+            border-radius: var(--r-sm);
+            overflow: hidden;
+        }
+
+        .gantt__block {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #0f172a;
+            position: relative;
+            min-width: 30px;
+            border-right: 1px solid rgba(0, 0, 0, 0.2);
+            transition: filter 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        /* entry animation only right after Run / Compare — not on every animation frame */
+        .gantt__track.is-animated .gantt__block {
+            animation: gantt-in 0.5s ease backwards;
+        }
+
+        /* hover changes colour only (no transform → no layout shift / scrollbar → no flicker) */
+        .gantt__block:hover {
+            filter: brightness(1.18);
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+        }
+
+        .gantt__block--idle {
+            background: repeating-linear-gradient(45deg,
+                    #1F2937,
+                    #1F2937 4px,
+                    #111827 4px,
+                    #111827 8px);
+            color: #9CA3AF !important;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        @keyframes gantt-in {
+            from {
+                opacity: 0;
+                transform: scaleX(0);
+            }
+
+            to {
+                opacity: 1;
+                transform: scaleX(1);
+            }
+        }
+
+        .gantt__block[data-tip]::after {
+            content: none;
+            /* replaced by the floating .gantt-tip element (was clipped by overflow:hidden) */
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity var(--t-fast);
+        }
+
+        .gantt__timeline {
+            display: flex;
+            margin-top: 4px;
+        }
+
+        .gantt__tick {
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+            text-align: left;
+            position: relative;
+        }
+
+        .gantt__tick::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 0;
+            width: 1px;
+            height: 4px;
+            background: var(--text-3);
+        }
+
+        .pc-0 { background: #60A5FA; color: #0f172a; } /* P1 ฟ้า */
+        .pc-1 { background: #F59E0B; color: #0f172a; } /* P2 เหลืองอำพัน */
+        .pc-2 { background: #34D399; color: #0f172a; } /* P3 เขียวมิ้นต์ */
+        .pc-3 { background: #F472B6; color: #0f172a; } /* P4 ชมพู */
+        .pc-4 { background: #A3E635; color: #0f172a; } /* P5 เขียวมะนาว */
+        .pc-5 { background: #FB923C; color: #0f172a; } /* P6 ส้ม */
+        .pc-6 { background: #2DD4BF; color: #0f172a; } /* P7 เขียวน้ำทะเล */
+        .pc-7 { background: #FACC15; color: #0f172a; } /* P8 เหลือง */
+        .pc-8 { background: #60A5FA; color: #0f172a; }
+        .pc-9 { background: #F59E0B; color: #0f172a; }
+
+        /* ══════════════════════════════════════════════════════════════
+       13. ALGORITHM INFO
+       ══════════════════════════════════════════════════════════════ */
+        .algo-info {
+            display: none;
+            padding: 20px;
+            background: var(--bg-input);
+            border-radius: var(--r-md);
+            border-left: 3px solid var(--indigo);
+            margin-bottom: 20px;
+        }
+
+        .algo-info.is-visible {
+            display: block;
+        }
+
+        .algo-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-1);
+        }
+
+        .algo-info p,
+        .algo-info li {
+            font-size: 0.9rem;
+            color: var(--text-2);
+            line-height: 1.7;
+        }
+
+        .algo-info ul {
+            margin: 8px 0 8px 20px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .tag--preemptive {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--emerald);
+        }
+
+        .tag--nonpreemptive {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--amber);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       14. COMPARISON (table + Gantt charts)
+       ══════════════════════════════════════════════════════════════ */
+        .sub-heading {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 24px 0 12px;
+            color: var(--text-1);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       15. PIPELINE VISUALIZATION
+       ══════════════════════════════════════════════════════════════ */
+        .pipeline {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 0;
+            align-items: stretch;
+            margin: 20px 0;
+            min-height: 200px;
+        }
+
+        .pipeline__stage {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            min-height: 180px;
+        }
+
+        #pipeReady {
+            border-color: rgba(59, 130, 246, 0.45);
+        }
+
+        #pipeReady .pipeline__stage-header {
+            color: #3B82F6;
+            border-bottom-color: rgba(59, 130, 246, 0.25);
+        }
+
+        #pipeReady .pipeline__stage-header .count-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3B82F6;
+        }
+
+        #pipeRunning {
+            border-color: rgba(34, 197, 94, 0.45);
+        }
+
+        #pipeRunning .pipeline__stage-header {
+            color: #22C55E;
+            border-bottom-color: rgba(34, 197, 94, 0.25);
+        }
+
+        #pipeCompleted {
+            border-color: rgba(100, 116, 139, 0.35);
+        }
+
+        #pipeCompleted .pipeline__stage-header {
+            color: #64748B;
+            border-bottom-color: rgba(100, 116, 139, 0.25);
+        }
+
+        #pipeCompleted .pipeline__stage-header .count-badge {
+            background: rgba(100, 116, 139, 0.2);
+            color: #64748B;
+        }
+
+        .pipeline__stage-header {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-2);
+            margin-bottom: 12px;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pipeline__stage-header .count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(14, 165, 233, 0.18);
+            color: var(--indigo);
+            font-size: 0.7rem;
+            margin-left: 6px;
+        }
+
+        .pipeline__items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .pipeline__item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+
+        .pipeline__item.is-new {
+            animation: pipe-slide-in 0.4s ease backwards;
+        }
+
+        @keyframes pipe-slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .pipeline__arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-3);
+            padding: 0 8px;
+        }
+
+        .pipeline__running {
+            position: relative;
+        }
+
+        .pipeline__running .pipeline__item {
+            animation: running-pulse 1.5s ease infinite;
+        }
+
+        @keyframes running-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
+            }
+
+            50% {
+                box-shadow: 0 0 14px 4px rgba(34, 197, 94, 0.25);
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       16. STEP-BY-STEP ANIMATION CONTROLS
+       ══════════════════════════════════════════════════════════════ */
+        .anim-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .anim-controls .btn {
+            padding: 8px 16px;
+            font-size: 0.82rem;
+        }
+
+        .anim-controls__time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--indigo);
+            min-width: 80px;
+        }
+
+        .anim-controls__speed {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            font-size: 0.82rem;
+            color: var(--text-2);
+        }
+
+        .anim-controls__speed select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: var(--text-1);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            outline: none;
+        }
+
+        .anim-progress {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-input);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .anim-progress__bar {
+            height: 100%;
+            background: var(--grad-main);
+            border-radius: 2px;
+            transition: width 0.2s ease;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       17. PROCESS TIMELINE (per-process horizontal)
+       ══════════════════════════════════════════════════════════════ */
+        .proc-timeline {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .proc-timeline__row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .proc-timeline__label {
+            min-width: 60px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-2);
+            text-align: right;
+            padding-right: 12px;
+        }
+
+        .proc-timeline__track {
+            display: flex;
+            flex: 1;
+            height: 28px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .proc-timeline__segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #fff;
+            transition: filter 0.2s;
+            position: relative;
+        }
+
+        .proc-timeline__segment:hover {
+            filter: brightness(1.3);
+            z-index: 2;
+        }
+
+        .proc-timeline__segment--waiting {
+            background: repeating-linear-gradient(45deg,
+                    rgba(245, 158, 11, 0.35), rgba(245, 158, 11, 0.35) 4px,
+                    transparent 4px, transparent 8px);
+            color: #F59E0B;
+            font-weight: 700;
+        }
+
+        .proc-timeline__segment--running {
+            color: #0f172a;
+            font-weight: 800;
+        }
+
+        .proc-timeline__segment--idle {
+            background: rgba(100, 116, 139, 0.15);
+            color: #64748B;
+        }
+
+        .proc-timeline__segment--notarrived {
+            background: transparent;
+        }
+
+        .proc-timeline__ticks {
+            display: flex;
+            margin-left: 60px;
+            margin-top: 2px;
+            margin-bottom: 12px;
+        }
+
+        .proc-timeline__tick {
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-3);
+            text-align: center;
+        }
+
+        .proc-timeline__legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .proc-timeline__legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.76rem;
+            color: var(--text-2);
+        }
+
+        .proc-timeline__legend-swatch {
+            width: 16px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       19. STATS CARDS
+       ══════════════════════════════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-card__label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-3);
+            margin-bottom: 6px;
+        }
+
+        .stat-card__value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-card__value--indigo {
+            color: var(--indigo);
+        }
+
+        .stat-card__value--cyan {
+            color: var(--cyan);
+        }
+
+        .stat-card__value--amber {
+            color: #F59E0B;
+        }
+
+        .stat-card__value--emerald {
+            color: #22C55E;
+        }
+
+        .stat-card__value--red {
+            color: #EF4444;
+        }
+
+        .stat-card__value--cs {
+            color: #F1F5F9;
+        }
+
+        .stat-card__value--idle {
+            color: #9CA3AF;
+        }
+
+        [data-theme="light"] .stat-card__value--cs {
+            color: #334155;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       20. RANDOM GENERATOR
+       ══════════════════════════════════════════════════════════════ */
+        .rand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       21. FOOTER
+       ══════════════════════════════════════════════════════════════ */
+        .footer {
+            text-align: center;
+            padding: 40px 20px 20px;
+            color: var(--text-3);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: var(--indigo);
+            text-decoration: none;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       22. UTILITIES
+       ══════════════════════════════════════════════════════════════ */
+        .fade-in {
+            animation: fade-in 0.5s ease;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .is-hidden-smooth {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            transition: opacity 0.3s, max-height 0.3s;
+        }
+
+        .is-dimmed {
+            opacity: 0.3;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       23. RESPONSIVE
+       ══════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .app {
+                padding: 12px 14px 40px;
+            }
+
+            .header {
+                padding: 32px 12px 28px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .pipeline {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .pipeline__arrow {
+                transform: rotate(90deg);
+                padding: 4px 0;
+            }
+
+            .anim-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .anim-controls__speed {
+                margin-left: 0;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+       24. LANGUAGE TOGGLE, INLINE ERRORS, NOTES
+       ══════════════════════════════════════════════════════════════ */
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 84px;
+            z-index: 100;
+            height: 28px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 3px;
+            box-shadow: var(--shadow-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: var(--t-normal);
+        }
+
+        .lang-toggle:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .lang-toggle span {
+            padding: 3px 8px;
+            border-radius: 100px;
+            color: var(--text-3);
+            transition: var(--t-fast);
+        }
+
+        .lang-toggle span.is-active {
+            background: var(--grad-main);
+            color: #fff;
+        }
+
+        .form-error {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 14px;
+            border-radius: var(--r-sm);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: var(--red);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .form-error.is-visible {
+            display: block;
+        }
+
+        .pipeline__hint {
+            font-size: 0.66rem;
+            font-weight: 500;
+            color: var(--text-3);
+            text-transform: none;
+            letter-spacing: 0;
+            margin-top: 4px;
+        }
+
+        .pipeline__meta {
+            font-size: 0.68rem;
+            font-weight: 500;
+            opacity: 0.85;
+        }
+
+        .pipeline__empty {
+            color: var(--text-3);
+            font-size: 0.78rem;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .stat-card__sub {
+            font-size: 0.68rem;
+            color: var(--text-3);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .metric-note {
+            font-size: 0.8rem;
+            color: var(--text-3);
+            margin-top: 12px;
+            line-height: 1.7;
+        }
+
+        /* Floating Gantt tooltip (one element, fixed to the viewport) */
+        .gantt-tip {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transition: opacity 0.12s ease;
+        }
+
+        .gantt-tip.is-visible {
+            opacity: 1;
+        }
+
+        /* Pipeline chip details: arrival / burst / priority / remaining */
+        .pipeline__name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .pipeline__meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 2px 10px;
+            font-size: 0.68rem;
+            font-weight: 500;
+            opacity: 0.95;
+            text-align: right;
+            line-height: 1.35;
+        }
+
+        .pipeline__meta b {
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pipeline__meta-hl {
+            background: rgba(0, 0, 0, 0.22);
+            padding: 0 6px;
+            border-radius: 4px;
+        }
+
+
+        /* ══════════════════════════════════════════════════════════════
+       25. SETUP FORM LAYOUT (aligned 4-column grid + random panel)
+       ══════════════════════════════════════════════════════════════ */
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px 16px;
+            align-items: start;
+            margin-bottom: 18px;
+        }
+
+        .setup-grid .span-3 {
+            grid-column: span 3;
+        }
+
+        .setup-grid .form-label,
+        .rand-grid .form-label {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .form-label--spacer {
+            visibility: hidden;
+        }
+
+        .form-hint {
+            font-size: 0.72rem;
+            color: var(--text-3);
+            line-height: 1.3;
+            min-height: 1.3em;
+        }
+
+        /* every control the same height, selects use the UI font */
+        .form-control {
+            height: 46px;
+            box-sizing: border-box;
+        }
+
+        select.form-control {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        #selAlgo {
+            width: 100%;
+        }
+
+        .btn--field {
+            height: 46px;
+            width: 100%;
+            justify-content: center;
+            padding: 0 16px;
+        }
+
+        #grpQuantum.is-dimmed .form-hint,
+        #grpPriority.is-dimmed .form-hint {
+            color: var(--text-3);
+        }
+
+        .rand-panel {
+            margin-top: 16px;
+            padding: 18px 20px 20px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+        }
+
+        .rand-panel__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .rand-panel__title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-1);
+            letter-spacing: 0.4px;
+        }
+
+        .rand-panel__x {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: var(--t-fast);
+        }
+
+        .rand-panel__x:hover {
+            border-color: var(--border-glow);
+            color: var(--text-1);
+        }
+
+        .rand-panel .rand-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin: 0;
+            align-items: start;
+        }
+
+        .rand-panel__foot {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 900px) {
+            .setup-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .setup-grid .span-3 {
+                grid-column: span 2;
+            }
+
+            .rand-panel .rand-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 560px) {
+
+            .setup-grid,
+            .rand-panel .rand-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .setup-grid .span-3 {
+                grid-column: auto;
+            }
+
+            .rand-panel__foot {
+                flex-direction: column-reverse;
+            }
+
+            .rand-panel__foot .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <!-- App Container -->
-  <div class="app-layout" id="app-layout">
-    <!-- Top Navigation / Header -->
-    <header class="app-header" id="app-header">
-      <div class="header-brand">
-        <div class="brand-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
-            <rect x="9" y="9" width="6" height="6"/>
-            <line x1="9" y1="1" x2="9" y2="4"/>
-            <line x1="15" y1="1" x2="15" y2="4"/>
-            <line x1="9" y1="20" x2="9" y2="23"/>
-            <line x1="15" y1="20" x2="15" y2="23"/>
-            <line x1="20" y1="9" x2="23" y2="9"/>
-            <line x1="20" y1="14" x2="23" y2="14"/>
-            <line x1="1" y1="9" x2="4" y2="9"/>
-            <line x1="1" y1="14" x2="4" y2="14"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="brand-title">CPU Scheduling Simulator</h1>
-          <p class="brand-subtitle">Interactive Process Scheduling Visualizer & Benchmark</p>
-        </div>
-      </div>
+    <!-- LANGUAGE + THEME TOGGLES -->
+    <button class="lang-toggle" id="langToggle" onclick="toggleLang()" aria-label="Switch language / เปลี่ยนภาษา">
+        <span data-lang="en">EN</span><span data-lang="th">TH</span>
+    </button>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <div class="theme-toggle__knob" id="themeKnob">🌙</div>
+    </button>
 
-      <!-- Navigation Tabs -->
-      <nav class="nav-tabs" id="main-nav-tabs">
-        <button class="nav-tab-btn active" id="tab-btn-sim">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-          การจำลองแบบโต้ตอบ (Simulation)
-        </button>
-        <button class="nav-tab-btn" id="tab-btn-compare">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10"/>
-            <line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-          เปรียบเทียบอัลกอริทึม (Comparison)
-        </button>
-        <button class="nav-tab-btn" id="tab-btn-theory">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-          ทฤษฎีและสูตรคำนวณ (Theory)
-        </button>
-      </nav>
+    <div class="app">
+        <!-- ═══════════════════════════════════════════════════════════
+         HEADER
+         ═══════════════════════════════════════════════════════════ -->
+        <header class="header">
+            <h1 class="header__title">⚡ CPU Scheduling Simulator</h1>
+        </header>
 
-      <!-- Quick Actions Header & Theme Toggle -->
-      <div class="header-actions">
-        <button class="btn btn-secondary btn-sm" id="btn-theme-toggle" title="สลับธีมหน้าจอ (Dark / Midnight / Light)">
-          <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-          <span id="theme-label">Cyber Dark</span>
-        </button>
-        <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="ส่งออกผลลัพธ์เป็น CSV สำหรับ Excel">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export CSV
-        </button>
-        <button class="btn btn-secondary btn-sm" id="btn-export-json" title="ส่งออกชุดข้อมูลเป็น JSON">
-          Export JSON
-        </button>
-      </div>
-    </header>
+        <!-- ═══════════════════════════════════════════════════════════
+         PROCESS INPUT
+         ═══════════════════════════════════════════════════════════ -->
+        <section id="sectionInput">
+            <div class="section-title">
+                <div class="section-title__icon">📝</div>
+                <h2 class="section-title__text" data-i18n="sec.input"></h2>
+            </div>
 
-    <!-- Main Content Area -->
-    <main class="app-main" id="app-main">
-      <!-- VIEW 1: INTERACTIVE SIMULATION -->
-      <section class="tab-view active" id="view-simulation">
-        <!-- Top Preset Bar -->
-        <div class="preset-toolbar glass-panel">
-          <div class="preset-left">
-            <label for="preset-select" class="toolbar-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              ชุดข้อมูลตัวอย่าง (Presets):
-            </label>
-            <select class="custom-select" id="preset-select">
-              <!-- Dynamically populated from presets.js -->
-            </select>
-          </div>
-          <div class="preset-right">
-            <button class="btn btn-secondary btn-sm" id="btn-random-generate">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-              สุ่ม Process (Random)
-            </button>
-            <button class="btn btn-secondary btn-sm" id="btn-clear-processes">ล้างตาราง</button>
-          </div>
-        </div>
-
-        <!-- Preset Description Info Banner -->
-        <div class="preset-desc-banner glass-panel" id="preset-desc-banner">
-          <div class="preset-desc-tag" id="preset-desc-tag">SRTF</div>
-          <p class="preset-desc-text" id="preset-desc-text">
-            Shortest Remaining Time First: Preemptive SJF จำลองการทำงานและวิเคราะห์เวลารอเฉลี่ย
-          </p>
-        </div>
-
-        <div class="simulation-grid">
-          <!-- LEFT COLUMN: Input Configuration & Settings -->
-          <div class="grid-left-col">
-            <!-- Algorithm Selection Card -->
-            <div class="card glass-panel" id="card-algorithm-settings">
-              <div class="card-header">
-                <h2 class="card-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  อัลกอริทึม & พารามิเตอร์
-                </h2>
-              </div>
-              <div class="card-body">
-                <div class="form-group">
-                  <label for="algorithm-select" class="form-label">เลือกอัลกอริทึม (Scheduling Algorithm):</label>
-                  <select class="custom-select custom-select-lg" id="algorithm-select">
-                    <optgroup label="Basic Algorithms">
-                      <option value="FCFS">First-Come, First-Served (FCFS)</option>
-                      <option value="SJF">Shortest-Job-First (SJF Non-preemptive)</option>
-                      <option value="SRTF" selected>Shortest Remaining Time First (SRTF Preemptive)</option>
-                      <option value="RR">Round-Robin (RR)</option>
-                    </optgroup>
-                    <optgroup label="Priority Scheduling">
-                      <option value="PRIORITY_NP">Priority (Non-preemptive)</option>
-                      <option value="PRIORITY_P">Priority (Preemptive)</option>
-                      <option value="PRIORITY_RR">Priority with Round-Robin (Equal Priority RR)</option>
-                    </optgroup>
-                    <optgroup label="Multilevel Queues">
-                      <option value="MLQ">Multilevel Queue (MLQ)</option>
-                      <option value="MLFQ">Multilevel Feedback Queue (MLFQ)</option>
-                    </optgroup>
-                  </select>
+            <div class="card">
+                <!-- Presets from textbook -->
+                <label class="form-label" style="margin-bottom: 8px; display: block;" data-i18n="presets.label"></label>
+                <div class="preset-row">
+                    <button class="preset-chip" onclick="loadPreset('fcfs1')" id="preset-fcfs1">FCFS · 24,3,3
+                        (p.25)</button>
+                    <button class="preset-chip" onclick="loadPreset('sjf1')" id="preset-sjf1">SJF · 6,8,7,3
+                        (p.30)</button>
+                    <button class="preset-chip" onclick="loadPreset('sjf_preempt')" id="preset-sjf_preempt">SRTF ·
+                        8,4,9,5 (p.36)</button>
+                    <button class="preset-chip" onclick="loadPreset('rr1')" id="preset-rr1">RR · q=4 (p.40)</button>
+                    <button class="preset-chip" onclick="loadPreset('priority1')" id="preset-priority1">Priority
+                        (p.48)</button>
+                    <button class="preset-chip" onclick="loadPreset('priority_pre')" id="preset-priority_pre"
+                        data-i18n="preset.priorityPre"></button>
+                    <button class="preset-chip" onclick="loadPreset('priority_rr')" id="preset-priority_rr">Priority +
+                        RR · q=2 (p.53)</button>
                 </div>
 
-                <!-- Dynamic Parameters -->
-                <div class="options-grid">
-                  <!-- Time Quantum (For RR & Priority+RR) -->
-                  <div class="option-item" id="opt-quantum-group">
-                    <label for="input-quantum" class="form-label">Time Quantum ($q$):</label>
-                    <div class="input-with-unit">
-                      <input type="number" id="input-quantum" class="form-control" value="4" min="1" max="100">
-                      <span class="unit-tag">ms</span>
+                <!-- Algorithm + process input: one 4-column grid so every field lines up -->
+                <div class="setup-grid">
+                    <div class="form-group span-3">
+                        <label class="form-label" for="selAlgo" data-i18n="algo.label"></label>
+                        <select class="form-control" id="selAlgo" onchange="onAlgoChange()">
+                            <option value="fcfs" data-i18n="opt.fcfs"></option>
+                            <option value="sjf" data-i18n="opt.sjf"></option>
+                            <option value="sjf_preemptive" data-i18n="opt.sjf_preemptive"></option>
+                            <option value="rr" data-i18n="opt.rr"></option>
+                            <option value="priority" data-i18n="opt.priority"></option>
+                            <option value="priority_preemptive" data-i18n="opt.priority_preemptive"></option>
+                            <option value="priority_rr" data-i18n="opt.priority_rr"></option>
+                        </select>
+                        <small class="form-hint" data-i18n="hint.algo"></small>
                     </div>
-                  </div>
-
-                  <!-- Context Switch Overhead -->
-                  <div class="option-item" id="opt-cs-group">
-                    <label for="input-context-switch" class="form-label">Context Switch Overhead:</label>
-                    <div class="input-with-unit">
-                      <input type="number" id="input-context-switch" class="form-control" value="0" min="0" max="10">
-                      <span class="unit-tag">ms</span>
+                    <div class="form-group" id="grpQuantum">
+                        <label class="form-label" for="inpQuantum" data-i18n="quantum.label"></label>
+                        <input class="form-control" type="number" id="inpQuantum" value="4" min="1" max="50" step="1"
+                            placeholder="4">
+                        <small class="form-hint" data-i18n="hint.quantum"></small>
                     </div>
-                  </div>
 
-                  <!-- Aging Rate (For Priority) -->
-                  <div class="option-item" id="opt-aging-group" style="display: none;">
-                    <label for="input-aging-rate" class="form-label">Aging Rate (ลด Priority ทุกๆ):</label>
-                    <div class="input-with-unit">
-                      <input type="number" id="input-aging-rate" class="form-control" value="0" min="0" max="50">
-                      <span class="unit-tag">ms (0=ปิด)</span>
+                    <div class="form-group">
+                        <label class="form-label" for="inpArrival" data-i18n="arrival.label"></label>
+                        <input class="form-control" type="number" id="inpArrival" value="0" min="0" max="100" step="1"
+                            placeholder="0">
+                        <small class="form-hint" data-i18n="hint.arrival"></small>
                     </div>
-                  </div>
+                    <div class="form-group">
+                        <label class="form-label" for="inpBurst" data-i18n="burst.label"></label>
+                        <input class="form-control" type="number" id="inpBurst" value="" min="1" max="50" step="1"
+                            data-i18n-ph="burst.ph">
+                        <small class="form-hint" data-i18n="hint.burst"></small>
+                    </div>
+                    <div class="form-group" id="grpPriority">
+                        <label class="form-label" for="inpPriority" data-i18n="priority.label"></label>
+                        <input class="form-control" type="number" id="inpPriority" value="0" min="0" max="99" step="1"
+                            placeholder="0">
+                        <small class="form-hint" data-i18n="hint.priority"></small>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label form-label--spacer" aria-hidden="true">&nbsp;</span>
+                        <button class="btn btn--secondary btn--field" onclick="addProcess()" id="btnAdd"
+                            data-i18n="btn.add"></button>
+                        <small class="form-hint" data-i18n="hint.enter"></small>
+                    </div>
+                </div>
 
-                  <!-- MLFQ Settings -->
-                  <div class="option-item col-span-2" id="opt-mlfq-group" style="display: none;">
-                    <div class="mlfq-sub-grid">
-                      <div>
-                        <label for="input-mlfq-q0" class="form-label">Queue 0 Quantum:</label>
-                        <div class="input-with-unit">
-                          <input type="number" id="input-mlfq-q0" class="form-control" value="8" min="1">
-                          <span class="unit-tag">ms</span>
+                <div class="btn-row">
+                    <button class="btn btn--green" onclick="showRandomGen()" id="btnRandom"
+                        data-i18n="btn.random"></button>
+                    <button class="btn btn--warn" onclick="clearProcesses()" id="btnClear"
+                        data-i18n="btn.clear"></button>
+                </div>
+
+                <!-- Random Generator Panel -->
+                <div id="panelRandom" class="rand-panel" style="display:none;">
+                    <div class="rand-panel__head">
+                        <span class="rand-panel__title" data-i18n="rand.title"></span>
+                        <button class="rand-panel__x" onclick="$('panelRandom').style.display='none'"
+                            aria-label="Close">✕</button>
+                    </div>
+                    <div class="rand-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="randCount" data-i18n="f.count"></label>
+                            <input class="form-control" type="number" id="randCount" value="5" min="2" max="20"
+                                step="1">
+                            <small class="form-hint">2 – 20</small>
                         </div>
-                      </div>
-                      <div>
-                        <label for="input-mlfq-q1" class="form-label">Queue 1 Quantum:</label>
-                        <div class="input-with-unit">
-                          <input type="number" id="input-mlfq-q1" class="form-control" value="16" min="1">
-                          <span class="unit-tag">ms</span>
+                        <div class="form-group">
+                            <label class="form-label" for="randMaxArr" data-i18n="f.maxArr"></label>
+                            <input class="form-control" type="number" id="randMaxArr" value="10" min="0" max="100"
+                                step="1">
+                            <small class="form-hint">0 – 100</small>
                         </div>
-                      </div>
-                      <div>
-                        <label for="input-mlfq-aging" class="form-label">MLFQ Aging Threshold:</label>
-                        <div class="input-with-unit">
-                          <input type="number" id="input-mlfq-aging" class="form-control" value="25" min="0">
-                          <span class="unit-tag">ms</span>
+                        <div class="form-group">
+                            <label class="form-label" for="randDist" data-i18n="rand.dist"></label>
+                            <select class="form-control" id="randDist">
+                                <option value="uniform" data-i18n="rand.uniform"></option>
+                                <option value="exponential" data-i18n="rand.exponential"></option>
+                            </select>
+                            <small class="form-hint" data-i18n="hint.dist"></small>
                         </div>
-                      </div>
+                        <div class="form-group">
+                            <label class="form-label" for="randMinBurst" data-i18n="f.minBurst"></label>
+                            <input class="form-control" type="number" id="randMinBurst" value="1" min="1" max="50"
+                                step="1">
+                            <small class="form-hint">1 – 50</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="randMaxBurst" data-i18n="f.maxBurst"></label>
+                            <input class="form-control" type="number" id="randMaxBurst" value="15" min="1" max="50"
+                                step="1">
+                            <small class="form-hint">1 – 50 · ≥ Min Burst</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="randMaxPri" data-i18n="f.maxPri"></label>
+                            <input class="form-control" type="number" id="randMaxPri" value="5" min="0" max="99"
+                                step="1">
+                            <small class="form-hint">0 – 99</small>
+                        </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Process Input Table Card -->
-            <div class="card glass-panel" id="card-processes">
-              <div class="card-header flex-between">
-                <h2 class="card-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                  รายการ Process (Workload)
-                </h2>
-                <button class="btn btn-primary btn-sm" id="btn-add-process" title="เพิ่ม Process ใหม่">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  เพิ่ม Process
-                </button>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="data-table" id="table-processes">
-                    <thead>
-                      <tr>
-                        <th>Process</th>
-                        <th>Arrival (ms)</th>
-                        <th>Burst (ms)</th>
-                        <th id="th-priority">Priority</th>
-                        <th id="th-queue" style="display: none;">Queue</th>
-                        <th style="width: 48px;"></th>
-                      </tr>
-                    </thead>
-                    <tbody id="process-table-body">
-                      <!-- Populated dynamically -->
-                    </tbody>
-                  </table>
-                </div>
-                <div class="table-footer-note">
-                  <small>* ค่า Priority ยิ่งน้อย = ความสำคัญยิ่งสูง (เช่น 0 หรือ 1 คือระดับ Priority สูงสุด)</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- RIGHT COLUMN: Simulation Playback, Gantt Chart, State, Metrics -->
-          <div class="grid-right-col">
-            <!-- Gantt Chart Card -->
-            <div class="card glass-panel" id="card-gantt">
-              <div class="card-header flex-between">
-                <div class="gantt-title-wrap">
-                  <h2 class="card-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                    Gantt Chart (แผนภูมิแกนต์)
-                  </h2>
-                  <span class="legend-hint">คลิกที่แท่งสีเพื่อกระโดดไปยังเวลานั้น</span>
-                </div>
-                <div class="gantt-header-right">
-                  <div class="gantt-legend-chips">
-                    <span class="legend-chip legend-idle">IDLE</span>
-                    <span class="legend-chip legend-cs">Context Switch</span>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body p-4">
-                <div class="gantt-scroll-container" id="gantt-container">
-                  <!-- Gantt bars rendered dynamically -->
-                </div>
-                <!-- Interactive Timeline Scrubber -->
-                <div class="timeline-scrubber-bar">
-                  <div class="scrubber-label">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <span>Timeline Scrubber:</span>
-                  </div>
-                  <input type="range" class="gantt-scrubber-slider" id="gantt-time-scrubber" min="0" max="100" value="0">
-                  <span class="scrubber-val font-mono" id="scrubber-time-val">t = 0 ms</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Live CPU & Ready Queue Hardware Card -->
-            <div class="card glass-panel" id="card-live-hardware">
-              <div class="hardware-grid">
-                <!-- CPU Core State -->
-                <div class="hardware-core-box">
-                  <div class="hw-label">
-                    <span class="pulse-dot"></span> CPU Core (1 Core)
-                  </div>
-                  <div class="cpu-core idle-cpu" id="cpu-status-indicator">
-                    <div class="cpu-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+                    <div class="rand-panel__foot">
+                        <button class="btn btn--warn" onclick="$('panelRandom').style.display='none'"
+                            data-i18n="rand.close"></button>
+                        <button class="btn btn--primary" onclick="generateRandom()" data-i18n="rand.go"></button>
                     </div>
-                    <div class="cpu-details">
-                      <span class="cpu-proc-name" id="cpu-running-name">IDLE</span>
-                      <small class="cpu-action-text" id="cpu-action-desc">รอเริ่มการจำลอง...</small>
+                </div>
+
+                <!-- Process table -->
+                <div class="table-wrap" id="wrapProcessTable">
+                    <table class="tbl" id="tblProcesses">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th.process"></th>
+                                <th data-i18n="th.arrival"></th>
+                                <th data-i18n="th.burst"></th>
+                                <th data-i18n="th.priority"></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyProcesses"></tbody>
+                    </table>
+                </div>
+
+                <div class="btn-row" style="margin-top: 16px;">
+                    <button class="btn btn--primary" onclick="runSimulation()" id="btnRun" data-i18n="btn.run"></button>
+                    <button class="btn btn--accent" onclick="runAllAndCompare()" id="btnCompare"
+                        data-i18n="btn.compare"></button>
+                </div>
+
+                <!-- Inline validation message (replaces alert()) -->
+                <div class="form-error" id="formError" role="alert" aria-live="polite"></div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+         ALGORITHM INFO PANEL (content from I18N, per algorithm)
+         ═══════════════════════════════════════════════════════════ -->
+        <section id="sectionAlgoInfo">
+            <div id="algoInfo" class="algo-info is-visible"></div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+         SINGLE ALGORITHM RESULT
+         ═══════════════════════════════════════════════════════════ -->
+        <section id="sectionResult" style="display: none;">
+            <div class="section-title">
+                <div class="section-title__icon">📊</div>
+                <h2 class="section-title__text" id="txtResultTitle"></h2>
+            </div>
+
+            <div class="card fade-in">
+                <!-- Stats overview -->
+                <div class="stats-grid" id="statsGrid"></div>
+
+                <!-- Step-by-Step Animation Controls -->
+                <div class="anim-controls" id="animControls">
+                    <button class="btn btn--secondary" onclick="animStepBack()" id="btnAnimBack"
+                        data-i18n="anim.back"></button>
+                    <button class="btn btn--primary" onclick="animTogglePlay()" id="btnAnimPlay"></button>
+                    <button class="btn btn--secondary" onclick="animStepFwd()" id="btnAnimFwd"
+                        data-i18n="anim.fwd"></button>
+                    <button class="btn btn--warn" onclick="animReset()" id="btnAnimReset"
+                        data-i18n="anim.reset"></button>
+                    <div class="anim-controls__time">
+                        t = <span id="animTimeDisplay">0</span>
                     </div>
-                  </div>
+                    <div class="anim-controls__speed">
+                        <span data-i18n="anim.speed"></span>
+                        <select id="animSpeed" onchange="animUpdateSpeed()">
+                            <option value="1000">0.5x</option>
+                            <option value="500" selected>1x</option>
+                            <option value="250">2x</option>
+                            <option value="100">5x</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="anim-progress">
+                    <div class="anim-progress__bar" id="animProgressBar"></div>
                 </div>
 
-                <!-- Live Ready Queue -->
-                <div class="hardware-queue-box">
-                  <div class="hw-label">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                    Ready Queue (คิวรอประมวลผล)
-                  </div>
-                  <div class="live-queue-belt" id="live-ready-queue">
-                    <span class="empty-q-tag">Ready Queue ว่างเปล่า</span>
-                  </div>
+                <!-- Pipeline Visualization -->
+                <h3 class="sub-heading" data-i18n="pipe.title"></h3>
+                <div class="pipeline" id="pipelineViz">
+                    <div class="pipeline__stage" id="pipeReady">
+                        <div class="pipeline__stage-header">
+                            📋 <span data-i18n="pipe.ready"></span> <span class="count-badge"
+                                id="pipeReadyCount">0</span>
+                            <div class="pipeline__hint" id="pipeReadyHint"></div>
+                        </div>
+                        <div class="pipeline__items" id="pipeReadyItems"></div>
+                    </div>
+                    <div class="pipeline__arrow">→</div>
+                    <div class="pipeline__stage pipeline__running" id="pipeRunning">
+                        <div class="pipeline__stage-header">⚙️ <span data-i18n="pipe.running"></span></div>
+                        <div class="pipeline__items" id="pipeRunningItems"></div>
+                    </div>
+                    <div class="pipeline__arrow">→</div>
+                    <div class="pipeline__stage" id="pipeCompleted">
+                        <div class="pipeline__stage-header">✅ <span data-i18n="pipe.completed"></span> <span
+                                class="count-badge" id="pipeCompCount">0</span></div>
+                        <div class="pipeline__items" id="pipeCompItems"></div>
+                    </div>
                 </div>
 
-                <!-- Live Terminated Processes -->
-                <div class="hardware-term-box">
-                  <div class="hw-label">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    Terminated (งานเสร็จสิ้น)
-                  </div>
-                  <div class="live-term-belt" id="live-terminated-list">
-                    <span class="empty-q-tag">ยังไม่มีงานเสร็จสิ้น</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Playback Controls Bar -->
-              <div class="playback-bar">
-                <div class="playback-controls">
-                  <button class="btn btn-secondary btn-icon-round" id="btn-reset" title="รีเซ็ต (Reset)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/></svg>
-                  </button>
-                  <button class="btn btn-secondary btn-icon-round" id="btn-step-backward" title="ถอยหลัง 1 ก้าว">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-                  </button>
-                  <button class="btn btn-primary" id="btn-play">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    เล่น (Play)
-                  </button>
-                  <button class="btn btn-secondary btn-icon-round" id="btn-step-forward" title="ไปข้างหน้า 1 ก้าว">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-                  </button>
+                <!-- Gantt Chart -->
+                <h3 class="sub-heading" data-i18n="gantt.title"></h3>
+                <div class="gantt" id="ganttMain">
+                    <div class="gantt__label" data-i18n="gantt.title"></div>
+                    <div class="gantt__track" id="ganttTrack"></div>
+                    <div class="gantt__timeline" id="ganttTimeline"></div>
                 </div>
 
-                <div class="playback-speed">
-                  <label for="sim-speed-slider" class="speed-label">ความเร็ว:</label>
-                  <input type="range" id="sim-speed-slider" min="0.2" max="4.0" step="0.2" value="1.0">
-                  <span class="speed-val" id="sim-speed-val">1.0x</span>
+                <!-- Per-Process Timeline -->
+                <h3 class="sub-heading" data-i18n="ptl.title"></h3>
+                <div class="gantt" id="procTimelineWrap">
+                    <div class="gantt__label" data-i18n="ptl.label"></div>
+                    <div class="proc-timeline" id="procTimeline"></div>
                 </div>
 
-                <div class="playback-status">
-                  <span class="time-pill">
-                    เวลา <strong id="sim-current-time">0 ms</strong>
-                  </span>
-                  <span class="step-pill" id="sim-step-index">Step 1 / 1</span>
+                <!-- Results Table -->
+                <h3 class="sub-heading" data-i18n="res.title"></h3>
+                <div class="table-wrap">
+                    <table class="tbl tbl--results" id="tblResults">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th.process"></th>
+                                <th data-i18n="th.arrival"></th>
+                                <th data-i18n="th.burst"></th>
+                                <th data-i18n="th.priority"></th>
+                                <th data-i18n="th.start"></th>
+                                <th data-i18n="th.finish"></th>
+                                <th data-i18n="th.waiting"></th>
+                                <th data-i18n="th.turnaround"></th>
+                                <th data-i18n="th.response"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyResults"></tbody>
+                    </table>
                 </div>
-              </div>
+                <p class="metric-note" data-i18n="res.formula"></p>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+         COMPARISON
+         ═══════════════════════════════════════════════════════════ -->
+        <section id="sectionCompare" style="display: none;">
+            <div class="section-title">
+                <div class="section-title__icon">⚖️</div>
+                <h2 class="section-title__text" data-i18n="sec.compare"></h2>
             </div>
 
-            <!-- Key Performance Metrics (KPI Cards) -->
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span class="metric-title">Average Waiting Time</span>
-                <span class="metric-value font-mono" id="metric-avg-wt">0.00 ms</span>
-                <span class="metric-desc">เวลาเฉลี่ยที่รอใน Ready Queue</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-title">Avg Turnaround Time</span>
-                <span class="metric-value font-mono" id="metric-avg-tat">0.00 ms</span>
-                <span class="metric-desc">เวลาทั้งหมดตั้งแต่เข้าสู่ระบบจนเสร็จ</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-title">Avg Response Time</span>
-                <span class="metric-value font-mono" id="metric-avg-rt">0.00 ms</span>
-                <span class="metric-desc">เวลาตั้งแต่เข้ามาจน CPU ตอบสนองครั้งแรก</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-title">CPU Utilization</span>
-                <span class="metric-value font-mono" id="metric-cpu-util">100.0%</span>
-                <span class="metric-desc">อัตราส่วนเวลาที่ CPU ทำงาน</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-title">Throughput</span>
-                <span class="metric-value font-mono" id="metric-throughput">0.000 /ms</span>
-                <span class="metric-desc">จำนวนงานที่เสร็จต่อหน่วยเวลา</span>
-              </div>
-              <div class="metric-card">
-                <span class="metric-title">Total Simulation Time</span>
-                <span class="metric-value font-mono" id="metric-total-time">0 ms</span>
-                <span class="metric-desc">เวลาสิ้นสุดของ Process ตัวสุดท้าย</span>
-              </div>
-            </div>
+            <div class="card fade-in">
+                <h3 class="sub-heading" style="margin-top:0;" data-i18n="cmp.tableTitle"></h3>
+                <div class="table-wrap">
+                    <table class="tbl tbl--results" id="tblCompare">
+                        <thead id="theadCompare"></thead>
+                        <tbody id="tbodyCompare"></tbody>
+                    </table>
+                </div>
+                <p class="metric-note" data-i18n="cmp.note"></p>
 
-            <!-- Detailed Process Metrics Table -->
-            <div class="card glass-panel" id="card-results-table">
-              <div class="card-header flex-between">
-                <h2 class="card-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-                  ตารางสรุปผลการคำนวณราย Process (Scheduling Metrics)
-                </h2>
-                <button class="btn btn-secondary btn-sm" id="btn-show-formula" title="แสดงขั้นตอนและสูตรการคำนวณละเอียด">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-                  ดูวิธีคำนวณสูตร (Formula Breakdown)
-                </button>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="data-table" id="table-results">
-                    <thead>
-                      <tr>
-                        <th>Process</th>
-                        <th>Arrival (AT)</th>
-                        <th>Burst (BT)</th>
-                        <th>Priority</th>
-                        <th>Start (ST)</th>
-                        <th>Finish (CT)</th>
-                        <th>Turnaround (TAT)</th>
-                        <th>Waiting (WT)</th>
-                        <th>Response (RT)</th>
-                      </tr>
-                    </thead>
-                    <tbody id="results-table-body">
-                      <!-- Rendered dynamically -->
-                    </tbody>
-                  </table>
-                </div>
-                <div class="table-footer-formula">
-                  <span><strong>สูตรคำนวณ:</strong> TAT = CT - AT | WT = TAT - BT | RT = First ST - AT</span>
-                </div>
-              </div>
+                <h3 class="sub-heading" data-i18n="cmp.ganttTitle"></h3>
+                <div id="compGantts"></div>
             </div>
-          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════════════════════════════ -->
+        <footer class="footer">
+            <p>CPU Scheduling Simulator — Chapter 4: CPU Scheduling</p>
+            <p style="margin-top: 4px;">
+                Ref: Silberschatz, Galvin &amp; Gagne (2018). <em>Operating System Concepts Essentials</em>. Wiley.
+            </p>
+            <p style="margin-top: 4px;">Dept. of Computer Engineering, KU Sriracha</p>
+        </footer>
+    </div><!-- /.app -->
+
+    <!-- ═══ JAVASCRIPT ═══ -->
+    <script>
+        'use strict';
+        /* ════════════════════════════════════════════════════════════════
+           I18N — English / Thai
+           ════════════════════════════════════════════════════════════════ */
+        const I18N = {};
+        I18N.en = {
+            'sec.input': 'Process Setup',
+            'presets.label': 'Textbook examples (presets)',
+            'preset.priorityPre': 'Priority Preemptive · with arrivals',
+            'algo.label': 'Algorithm',
+            'opt.fcfs': 'First-Come, First-Served (FCFS)',
+            'opt.sjf': 'Shortest-Job-First (SJF) — Non-preemptive',
+            'opt.sjf_preemptive': 'Shortest-Job-First — Preemptive (SRTF)',
+            'opt.rr': 'Round Robin (RR)',
+            'opt.priority': 'Priority Scheduling — Non-preemptive',
+            'opt.priority_preemptive': 'Priority Scheduling — Preemptive',
+            'opt.priority_rr': 'Priority + Round Robin',
+            'quantum.label': 'Time Quantum',
+            'arrival.label': 'Arrival Time',
+            'burst.label': 'Burst Time',
+            'burst.ph': 'e.g. 10',
+            'priority.label': 'Priority',
+            'hint.algo': 'Pick an algorithm, or load a textbook preset above',
+            'hint.quantum': 'q = 1 – 50 · used by RR, Priority + RR',
+            'hint.arrival': '0 – 100',
+            'hint.burst': '1 – 50',
+            'hint.priority': '0 – 99 · lower number = higher priority',
+            'hint.enter': 'or press Enter in any field',
+            'hint.dist': 'Exponential = many short bursts (p.5)',
+            'btn.add': '➕ Add Process',
+            'btn.random': '🎲 Random Processes',
+            'btn.clear': '🗑️ Clear All',
+            'rand.title': '🎲 Random Process Generator',
+            'rand.dist': 'Distribution',
+            'rand.uniform': 'Uniform',
+            'rand.exponential': 'Exponential (many short bursts)',
+            'rand.go': '⚡ Generate',
+            'rand.close': '✕ Close',
+            'th.process': 'Process', 'th.arrival': 'Arrival', 'th.burst': 'Burst', 'th.priority': 'Priority',
+            'th.start': 'First Run', 'th.finish': 'Finish', 'th.waiting': 'Waiting',
+            'th.turnaround': 'Turnaround', 'th.response': 'Response',
+            'th.algorithm': 'Algorithm', 'th.avgW': 'Avg Waiting', 'th.avgT': 'Avg Turnaround',
+            'th.avgR': 'Avg Response', 'th.cs': 'Context Switches',
+            'tbl.empty': 'No processes yet — add a process or pick a preset above.',
+            'btn.remove': 'Remove',
+            'btn.run': '🚀 Run Simulation',
+            'btn.compare': '📊 Compare All Algorithms',
+
+            'f.arrival': 'Arrival Time', 'f.burst': 'Burst Time', 'f.priority': 'Priority',
+            'f.quantum': 'Time Quantum', 'f.count': 'Number of processes', 'f.maxArr': 'Max Arrival',
+            'f.minBurst': 'Min Burst', 'f.maxBurst': 'Max Burst', 'f.maxPri': 'Max Priority',
+            'err.range': '{field} must be a whole number from {min} to {max}.',
+            'err.noProc': 'Please add at least one process first.',
+            'err.maxProcs': 'At most {n} processes are allowed.',
+            'err.minMax': 'Min Burst must not be greater than Max Burst.',
+
+            'result.title': 'Result — {algo}',
+            'anim.back': '⏮ Back', 'anim.play': '▶ Play', 'anim.pause': '⏸ Pause',
+            'anim.fwd': '⏭ Next', 'anim.reset': '↺ Reset', 'anim.speed': '⚡ Speed:',
+            'pipe.title': '🔄 CPU Pipeline (at current time t)',
+            'pipe.ready': 'Ready Queue', 'pipe.running': 'Running', 'pipe.completed': 'Completed',
+            'pipe.empty': 'empty', 'pipe.idle': 'Idle (CPU free)',
+            'pipe.arrival': 'Arrival', 'pipe.burst': 'Burst', 'pipe.priority': 'Priority',
+            'pipe.rem': 'Remaining', 'pipe.finish': 'Finished at',
+            'qorder.fifo': 'FIFO order (head first)',
+            'qorder.burst': 'Ordered by burst time (shortest first)',
+            'qorder.rem': 'Ordered by remaining time (shortest first)',
+            'qorder.pri': 'Ordered by priority (lowest number first)',
+            'qorder.prirr': 'By priority, then RR (FIFO) order within a level',
+            'gantt.title': '📊 Gantt Chart',
+            'gantt.empty': 'Nothing has run yet at t = 0 — press Next or Play.',
+            'gantt.none': 'No data',
+            'gantt.idle': 'idle',
+            'ptl.title': '📐 Per-Process Timeline',
+            'ptl.label': 'Process-level view (state of each process in each time unit)',
+            'ptl.running': 'Running', 'ptl.waiting': 'Waiting (ready queue)', 'ptl.idle': 'Not arrived / Completed',
+            'ptl.state.running': 'running', 'ptl.state.waiting': 'waiting', 'ptl.state.idle': 'completed', 'ptl.state.notarrived': 'not arrived',
+            'res.title': '📋 Results Table',
+            'res.avg': 'Average',
+            'res.formula': 'Turnaround = Finish − Arrival · Waiting = Turnaround − Burst · Response = First Run − Arrival (Ch.4 p.19–20). Context switch = the CPU switches directly from one process to a different process; a process that keeps the CPU because it is the only runnable one (p.41), or a dispatch onto an idle CPU, is not counted.',
+
+            'st.makespan': 'Total Time (makespan)',
+            'st.util': 'CPU Utilization',
+            'st.throughput': 'Throughput',
+            'st.throughputSub': '{n} processes / {t} ms',
+            'st.cs': 'Context Switches',
+            'st.csSub': '{v} on completion (voluntary) · {nv} by preemption (nonvoluntary)',
+            'st.idle': 'Idle Time',
+
+            'sec.compare': 'Compare All Algorithms',
+            'cmp.tableTitle': '📋 Detailed Comparison',
+            'cmp.note': 'Green = best value in each column (lower is better). All times in ms.',
+            'cmp.ganttTitle': '📈 Gantt Charts — All Algorithms',
+        };
+        Object.assign(I18N.en, {
+            'info.fcfs': `<h3>📌 First-Come, First-Served (FCFS)</h3>
+        <span class="tag tag--nonpreemptive">Non-preemptive</span>
+        <p style="margin-top:10px;">The process that requests the CPU first is allocated the CPU first — managed with a FIFO ready queue (p.23).</p>
+        <ul>
+            <li><strong>Pros:</strong> simple to write and understand.</li>
+            <li><strong>Cons:</strong> average waiting time is often long; <strong>convoy effect</strong> — short processes wait behind one long process (p.27).</li>
+            <li><strong>Not suited to:</strong> interactive systems — one process can keep the CPU for a long time (p.28).</li>
+        </ul>`,
+            'info.sjf': `<h3>📌 Shortest-Job-First (SJF) — Non-preemptive</h3>
+        <span class="tag tag--nonpreemptive">Non-preemptive</span>
+        <p style="margin-top:10px;">The CPU goes to the process with the <strong>smallest next CPU burst</strong>; ties are broken by FCFS (p.29).</p>
+        <ul>
+            <li><strong>Pros:</strong> provably optimal — minimum average waiting time for a given set of processes (p.31).</li>
+            <li><strong>Cons:</strong> the length of the next CPU burst is not known, so it must be predicted (p.32).</li>
+            <li><strong>Prediction:</strong> τ<sub>n+1</sub> = α·t<sub>n</sub> + (1−α)·τ<sub>n</sub> (exponential average, p.33).</li>
+        </ul>`,
+            'info.sjf_preemptive': `<h3>📌 Shortest-Job-First — Preemptive (SRTF)</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">If a newly arrived process needs less time than what is <strong>left</strong> of the running process, the running process is <strong>preempted</strong> (p.35).</p>
+        <ul>
+            <li><strong>Also called:</strong> Shortest-Remaining-Time-First (SRTF).</li>
+            <li><strong>Tie rule:</strong> on equal remaining time the running process keeps the CPU (no extra context switch).</li>
+            <li><strong>Pros:</strong> lower average waiting time than non-preemptive SJF (p.37: 6.5 vs 7.75 ms).</li>
+            <li><strong>Cons:</strong> more context switches; long processes may wait a long time (SJF is a special case of priority scheduling, p.47).</li>
+        </ul>`,
+            'info.rr': `<h3>📌 Round Robin (RR)</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">Like FCFS, but each process runs for at most one <strong>time quantum q</strong>, then goes to the <strong>tail</strong> of the ready queue (p.38–39).</p>
+        <ul>
+            <li><strong>Each process gets:</strong> 1/n of the CPU time; it waits no longer than (n−1) × q (p.42).</li>
+            <li><strong>Quantum size:</strong> too large → behaves like FCFS; too small → many context switches (p.43).</li>
+            <li><strong>Rule of thumb:</strong> 80% of CPU bursts should be shorter than q (p.46).</li>
+            <li><strong>Convention used here:</strong> a process arriving at the instant a quantum expires joins the queue before the preempted process.</li>
+        </ul>`,
+            'info.priority': `<h3>📌 Priority Scheduling — Non-preemptive</h3>
+        <span class="tag tag--nonpreemptive">Non-preemptive</span>
+        <p style="margin-top:10px;">The CPU goes to the highest-priority process — <strong>lower number = higher priority</strong>; equal priorities are served FCFS (p.47).</p>
+        <ul>
+            <li><strong>SJF is a special case:</strong> priority = inverse of the (predicted) next CPU burst (p.47).</li>
+            <li><strong>Problem:</strong> <strong>starvation</strong> (indefinite blocking) of low-priority processes (p.51).</li>
+            <li><strong>Solution:</strong> <strong>aging</strong> — gradually raise the priority of processes that wait a long time (p.52).</li>
+        </ul>`,
+            'info.priority_preemptive': `<h3>📌 Priority Scheduling — Preemptive</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">If a newly arrived process has a higher priority than the running process, the running process is <strong>preempted</strong> (p.50).</p>
+        <ul>
+            <li><strong>Pros:</strong> an important process gets the CPU immediately.</li>
+            <li><strong>Cons:</strong> more context switches; low-priority processes can still starve (p.51) — solved by aging (p.52).</li>
+            <li><strong>Try:</strong> preset “Priority Preemptive · with arrivals” and compare with the non-preemptive version.</li>
+        </ul>`,
+            'info.priority_rr': `<h3>📌 Priority + Round Robin</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">Run the highest-priority process; processes with the <strong>same priority</strong> share the CPU with <strong>round robin</strong> (quantum q) (p.53–54).</p>
+        <ul>
+            <li>A process that is alone at its priority level keeps running after its quantum (p.54: P3 runs 16–20).</li>
+            <li>A newly arrived higher-priority process preempts the running one; the preempted process goes to the tail of its level.</li>
+            <li><strong>Try:</strong> preset “Priority + RR · q=2 (p.53)” — it reproduces the textbook Gantt chart.</li>
+        </ul>`,
+        });
+        I18N.th = {
+            'sec.input': 'ตั้งค่า Process',
+            'presets.label': 'ตัวอย่างจากหนังสือ (Presets)',
+            'preset.priorityPre': 'Priority Preemptive · มาถึงไม่พร้อมกัน',
+            'algo.label': 'อัลกอริทึม',
+            'opt.fcfs': 'First-Come, First-Served (FCFS)',
+            'opt.sjf': 'Shortest-Job-First (SJF) — Non-preemptive',
+            'opt.sjf_preemptive': 'Shortest-Job-First — Preemptive (SRTF)',
+            'opt.rr': 'Round Robin (RR)',
+            'opt.priority': 'Priority Scheduling — Non-preemptive',
+            'opt.priority_preemptive': 'Priority Scheduling — Preemptive',
+            'opt.priority_rr': 'Priority + Round Robin',
+            'quantum.label': 'Time Quantum',
+            'arrival.label': 'Arrival Time (เวลามาถึง)',
+            'burst.label': 'Burst Time (เวลาใช้ CPU)',
+            'burst.ph': 'เช่น 10',
+            'priority.label': 'Priority',
+            'hint.algo': 'เลือกอัลกอริทึม หรือกด preset จากหนังสือด้านบน',
+            'hint.quantum': 'q = 1 – 50 · ใช้กับ RR, Priority + RR',
+            'hint.arrival': '0 – 100',
+            'hint.burst': '1 – 50',
+            'hint.priority': '0 – 99 · เลขน้อย = สำคัญมาก',
+            'hint.enter': 'หรือกด Enter ในช่องใดก็ได้',
+            'hint.dist': 'Exponential = burst สั้นเยอะ (หน้า 5)',
+            'btn.add': '➕ เพิ่ม Process',
+            'btn.random': '🎲 สุ่ม Process',
+            'btn.clear': '🗑️ ล้างทั้งหมด',
+            'rand.title': '🎲 สุ่มสร้าง Process',
+            'rand.dist': 'การกระจาย',
+            'rand.uniform': 'Uniform (สม่ำเสมอ)',
+            'rand.exponential': 'Exponential (burst สั้นเยอะ)',
+            'rand.go': '⚡ สร้างเลย',
+            'rand.close': '✕ ปิด',
+            'th.process': 'Process', 'th.arrival': 'Arrival', 'th.burst': 'Burst', 'th.priority': 'Priority',
+            'th.start': 'เริ่มรันครั้งแรก', 'th.finish': 'เสร็จ', 'th.waiting': 'Waiting',
+            'th.turnaround': 'Turnaround', 'th.response': 'Response',
+            'th.algorithm': 'อัลกอริทึม', 'th.avgW': 'Avg Waiting', 'th.avgT': 'Avg Turnaround',
+            'th.avgR': 'Avg Response', 'th.cs': 'Context Switches',
+            'tbl.empty': 'ยังไม่มี process — เพิ่ม process หรือเลือก Preset ด้านบน',
+            'btn.remove': 'ลบ',
+            'btn.run': '🚀 จำลองการทำงาน',
+            'btn.compare': '📊 เปรียบเทียบทุกอัลกอริทึม',
+
+            'f.arrival': 'Arrival Time', 'f.burst': 'Burst Time', 'f.priority': 'Priority',
+            'f.quantum': 'Time Quantum', 'f.count': 'จำนวน Process', 'f.maxArr': 'Arrival สูงสุด',
+            'f.minBurst': 'Burst ต่ำสุด', 'f.maxBurst': 'Burst สูงสุด', 'f.maxPri': 'Priority สูงสุด',
+            'err.range': '{field} ต้องเป็นจำนวนเต็มตั้งแต่ {min} ถึง {max}',
+            'err.noProc': 'กรุณาเพิ่ม process อย่างน้อย 1 ตัวก่อน',
+            'err.maxProcs': 'เพิ่มได้สูงสุด {n} process',
+            'err.minMax': 'Burst ต่ำสุดต้องไม่มากกว่า Burst สูงสุด',
+
+            'result.title': 'ผลลัพธ์ — {algo}',
+            'anim.back': '⏮ ย้อน', 'anim.play': '▶ เล่น', 'anim.pause': '⏸ หยุด',
+            'anim.fwd': '⏭ ถัดไป', 'anim.reset': '↺ รีเซ็ต', 'anim.speed': '⚡ ความเร็ว:',
+            'pipe.title': '🔄 CPU Pipeline (ณ เวลา t ปัจจุบัน)',
+            'pipe.ready': 'Ready Queue', 'pipe.running': 'Running', 'pipe.completed': 'Completed',
+            'pipe.empty': 'ว่าง', 'pipe.idle': 'Idle (CPU ว่าง)',
+            'pipe.arrival': 'Arrival', 'pipe.burst': 'Burst', 'pipe.priority': 'Priority',
+            'pipe.rem': 'เหลือ', 'pipe.finish': 'เสร็จที่',
+            'qorder.fifo': 'เรียงแบบ FIFO (หัวคิวอยู่บน)',
+            'qorder.burst': 'เรียงตาม burst time (สั้นสุดอยู่บน)',
+            'qorder.rem': 'เรียงตามเวลาที่เหลือ (น้อยสุดอยู่บน)',
+            'qorder.pri': 'เรียงตาม priority (เลขน้อยอยู่บน)',
+            'qorder.prirr': 'เรียงตาม priority แล้วตามลำดับ RR (FIFO) ในระดับเดียวกัน',
+            'gantt.title': '📊 Gantt Chart',
+            'gantt.empty': 'ที่ t = 0 ยังไม่มีอะไรรัน — กด ถัดไป หรือ เล่น',
+            'gantt.none': 'ไม่มีข้อมูล',
+            'gantt.idle': 'idle',
+            'ptl.title': '📐 Timeline ราย Process',
+            'ptl.label': 'มุมมองราย process (สถานะของแต่ละ process ในแต่ละหน่วยเวลา)',
+            'ptl.running': 'Running', 'ptl.waiting': 'Waiting (อยู่ใน ready queue)', 'ptl.idle': 'ยังไม่มา / เสร็จแล้ว',
+            'ptl.state.running': 'กำลังรัน', 'ptl.state.waiting': 'รอ', 'ptl.state.idle': 'เสร็จแล้ว', 'ptl.state.notarrived': 'ยังไม่มา',
+            'res.title': '📋 ตารางผลลัพธ์',
+            'res.avg': 'ค่าเฉลี่ย',
+            'res.formula': 'Turnaround = Finish − Arrival · Waiting = Turnaround − Burst · Response = เริ่มรันครั้งแรก − Arrival (บทที่ 4 หน้า 19–20) · Context switch = CPU สลับจาก process หนึ่งไปอีก process หนึ่งโดยตรง; ถ้า process ได้รันต่อเพราะเป็นตัวเดียวที่พร้อม (หน้า 41) หรือ CPU ว่างแล้วจึงรับ process ใหม่ จะไม่นับ',
+
+            'st.makespan': 'เวลารวม (makespan)',
+            'st.util': 'CPU Utilization',
+            'st.throughput': 'Throughput',
+            'st.throughputSub': '{n} process / {t} ms',
+            'st.cs': 'Context Switches',
+            'st.csSub': 'เพราะจบงาน (voluntary) {v} · ถูก preempt (nonvoluntary) {nv}',
+            'st.idle': 'เวลา CPU ว่าง',
+
+            'sec.compare': 'เปรียบเทียบทุกอัลกอริทึม',
+            'cmp.tableTitle': '📋 ตารางเปรียบเทียบละเอียด',
+            'cmp.note': 'สีเขียว = ค่าที่ดีที่สุดในแต่ละคอลัมน์ (ยิ่งน้อยยิ่งดี) · หน่วยเวลาเป็น ms',
+            'cmp.ganttTitle': '📈 Gantt Chart ทุกอัลกอริทึม',
+        };
+        Object.assign(I18N.th, {
+            'info.fcfs': `<h3>📌 First-Come, First-Served (FCFS)</h3>
+        <span class="tag tag--nonpreemptive">Non-preemptive</span>
+        <p style="margin-top:10px;">Process ที่ขอ CPU ก่อนได้ CPU ก่อน — ใช้ ready queue แบบ FIFO (หน้า 23)</p>
+        <ul>
+            <li><strong>ข้อดี:</strong> เขียนง่าย เข้าใจง่าย</li>
+            <li><strong>ข้อเสีย:</strong> avg waiting time มักสูง; เกิด <strong>convoy effect</strong> — process สั้นต้องรอ process ยาวตัวเดียว (หน้า 27)</li>
+            <li><strong>ไม่เหมาะกับ:</strong> ระบบ interactive เพราะ process เดียวอาจครอง CPU นาน (หน้า 28)</li>
+        </ul>`,
+            'info.sjf': `<h3>📌 Shortest-Job-First (SJF) — Non-preemptive</h3>
+        <span class="tag tag--nonpreemptive">Non-preemptive</span>
+        <p style="margin-top:10px;">ให้ CPU กับ process ที่มี <strong>CPU burst ถัดไปสั้นที่สุด</strong>; ถ้าเท่ากันใช้ FCFS (หน้า 29)</p>
+        <ul>
+            <li><strong>ข้อดี:</strong> optimal — ได้ avg waiting time ต่ำที่สุดสำหรับชุด process ที่กำหนด (หน้า 31)</li>
+            <li><strong>ข้อเสีย:</strong> ไม่รู้ความยาว CPU burst ถัดไปจริง ต้องประมาณ (หน้า 32)</li>
+            <li><strong>การประมาณ:</strong> τ<sub>n+1</sub> = α·t<sub>n</sub> + (1−α)·τ<sub>n</sub> (exponential average หน้า 33)</li>
+        </ul>`,
+            'info.sjf_preemptive': `<h3>📌 Shortest-Job-First — Preemptive (SRTF)</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">ถ้า process ที่เพิ่งมาต้องใช้เวลาน้อยกว่า<strong>เวลาที่เหลือ</strong>ของ process ที่กำลังรัน จะ <strong>preempt</strong> ทันที (หน้า 35)</p>
+        <ul>
+            <li><strong>ชื่อเต็ม:</strong> Shortest-Remaining-Time-First (SRTF)</li>
+            <li><strong>กรณีเท่ากัน:</strong> process ที่กำลังรันได้รันต่อ (ไม่เกิด context switch เพิ่ม)</li>
+            <li><strong>ข้อดี:</strong> avg waiting time ต่ำกว่า SJF แบบ non-preemptive (หน้า 37: 6.5 เทียบ 7.75 ms)</li>
+            <li><strong>ข้อเสีย:</strong> context switch บ่อยขึ้น; process ยาวอาจรอนาน (SJF เป็นกรณีพิเศษของ priority scheduling หน้า 47)</li>
+        </ul>`,
+            'info.rr': `<h3>📌 Round Robin (RR)</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">เหมือน FCFS แต่แต่ละ process รันได้ไม่เกิน 1 <strong>time quantum (q)</strong> ถ้ายังไม่เสร็จจะไป<strong>ท้ายคิว</strong> (หน้า 38–39)</p>
+        <ul>
+            <li><strong>แต่ละ process ได้:</strong> 1/n ของเวลา CPU และรอไม่เกิน (n−1) × q (หน้า 42)</li>
+            <li><strong>ขนาด quantum:</strong> ใหญ่เกิน → เหมือน FCFS; เล็กเกิน → context switch เยอะ (หน้า 43)</li>
+            <li><strong>กฎ:</strong> 80% ของ CPU burst ควรสั้นกว่า q (หน้า 46)</li>
+            <li><strong>ข้อตกลงในโปรแกรมนี้:</strong> process ที่มาถึงพอดีตอน quantum หมด จะเข้าคิวก่อน process ที่ถูก preempt</li>
+        </ul>`,
+            'info.priority': `<h3>📌 Priority Scheduling — Non-preemptive</h3>
+        <span class="tag tag--nonpreemptive">Non-preemptive</span>
+        <p style="margin-top:10px;">ให้ CPU กับ process ที่ priority สูงสุด — <strong>เลขน้อย = สำคัญมาก</strong>; priority เท่ากันใช้ FCFS (หน้า 47)</p>
+        <ul>
+            <li><strong>SJF เป็นกรณีพิเศษ:</strong> priority = ส่วนกลับของ CPU burst ถัดไป (หน้า 47)</li>
+            <li><strong>ปัญหา:</strong> <strong>starvation</strong> (indefinite blocking) ของ process priority ต่ำ (หน้า 51)</li>
+            <li><strong>ทางแก้:</strong> <strong>aging</strong> — ค่อย ๆ เพิ่ม priority ให้ process ที่รอนาน (หน้า 52)</li>
+        </ul>`,
+            'info.priority_preemptive': `<h3>📌 Priority Scheduling — Preemptive</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">ถ้า process ที่เพิ่งมามี priority สูงกว่า process ที่กำลังรัน จะ <strong>preempt</strong> (หน้า 50)</p>
+        <ul>
+            <li><strong>ข้อดี:</strong> process สำคัญได้ CPU ทันที</li>
+            <li><strong>ข้อเสีย:</strong> context switch บ่อยขึ้น; process priority ต่ำยังเกิด starvation ได้ (หน้า 51) — แก้ด้วย aging (หน้า 52)</li>
+            <li><strong>ลองดู:</strong> preset “Priority Preemptive · มาถึงไม่พร้อมกัน” แล้วเทียบกับแบบ non-preemptive</li>
+        </ul>`,
+            'info.priority_rr': `<h3>📌 Priority + Round Robin</h3>
+        <span class="tag tag--preemptive">Preemptive</span>
+        <p style="margin-top:10px;">รัน process ที่ priority สูงสุด; process ที่ <strong>priority เท่ากัน</strong> ผลัดกันใช้ CPU แบบ <strong>round robin</strong> (quantum q) (หน้า 53–54)</p>
+        <ul>
+            <li>ถ้าเหลือ process เดียวใน priority นั้น จะรันต่อได้เลยแม้ quantum หมด (หน้า 54: P3 รัน 16–20)</li>
+            <li>ถ้ามี process priority สูงกว่ามาถึง จะ preempt; ตัวที่ถูก preempt ไปต่อท้ายคิวของระดับตัวเอง</li>
+            <li><strong>ลองดู:</strong> preset “Priority + RR · q=2 (p.53)” — ได้ Gantt chart ตรงกับหนังสือ</li>
+        </ul>`,
+        });
+
+        /* ════════════════════════════════════════════════════════════════
+           CONSTANTS
+           ════════════════════════════════════════════════════════════════ */
+        const ALGO_LABELS = {
+            fcfs: 'FCFS',
+            sjf: 'SJF',
+            sjf_preemptive: 'SRTF',
+            rr: 'Round Robin',
+            priority: 'Priority',
+            priority_preemptive: 'Priority (Pre)',
+            priority_rr: 'Priority + RR',
+        };
+
+        const ALL_ALGO_KEYS = Object.keys(ALGO_LABELS);
+        const QUANTUM_ALGOS = ['rr', 'priority_rr'];
+        const PRIORITY_ALGOS = ['priority', 'priority_preemptive', 'priority_rr'];
+
+        const PALETTE = [
+            '#60A5FA', // P1 ฟ้า
+            '#F59E0B', // P2 เหลืองอำพัน
+            '#34D399', // P3 เขียวมิ้นต์
+            '#F472B6', // P4 ชมพู
+            '#A3E635', // P5 เขียวมะนาว (แทนม่วง)
+            '#FB923C', // P6 ส้ม
+            '#2DD4BF', // P7 เขียวน้ำทะเล
+            '#FACC15', // P8 เหลือง
+        ];
+
+        const BAR_COLORS = ['#60A5FA', '#F59E0B', '#34D399', '#F472B6', '#A3E635', '#FB923C', '#2DD4BF', '#FACC15'];
+
+        const MIN_BLOCK_PX = 30;
+        const MIN_BLOCK_PX_S = 24;
+        const MAX_ITER = 10000;
+
+        // Input limits — keep the simulation (and the DOM) small enough for a live demo
+        const LIMITS = {
+            arrival: [0, 100],
+            burst: [1, 50],
+            priority: [0, 99],
+            quantum: [1, 50],
+            count: [2, 20],
+            maxProcs: 20,
+        };
+
+        /* ════════════════════════════════════════════════════════════════
+           STATE
+           ════════════════════════════════════════════════════════════════ */
+        let processes = [];
+        let processIdSeq = 1;
+        let comparisonData = {};
+        let compQuantum = 4;
+        let lang = 'en';
+        let lastError = null;   // { key, vars } so the message can be re-translated
+        let lastSingle = null;   // { algo, quantum, result, stats }
+
+        // Animation state
+        let animTimeline = [];   // per-time-unit snapshots
+        let animCurrentTime = 0;
+        let animPlaying = false;
+        let animInterval = null;
+        let animSpeed = 500;
+        let ganttAnimateOnce = false;                 // play the Gantt entry animation once after Run
+        let pipePrev = { ready: new Set(), running: null, completed: new Set() };
+
+        /* ════════════════════════════════════════════════════════════════
+           DOM / STORAGE HELPERS
+           ════════════════════════════════════════════════════════════════ */
+        const $ = (id) => document.getElementById(id);
+
+        function storeGet(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+        function storeSet(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           I18N HELPERS
+           ════════════════════════════════════════════════════════════════ */
+        function t(key, vars) {
+            let s = (I18N[lang] && I18N[lang][key] !== undefined) ? I18N[lang][key]
+                : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+            if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
+            return s;
+        }
+
+        function toggleLang() {
+            setLang(lang === 'en' ? 'th' : 'en');
+        }
+
+        function setLang(next) {
+            lang = I18N[next] ? next : 'en';
+            storeSet('lang', lang);
+            applyLang();
+        }
+
+        function applyLang() {
+            document.documentElement.lang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+            document.querySelectorAll('#langToggle [data-lang]').forEach(el => {
+                el.classList.toggle('is-active', el.dataset.lang === lang);
+            });
+            $('btnAnimPlay').textContent = animPlaying ? t('anim.pause') : t('anim.play');
+            renderAlgoInfo();
+            renderProcessTable();
+            if (lastError) showError(lastError.key, lastError.vars);
+            if ($('sectionResult').style.display !== 'none' && lastSingle) refreshSingleView();
+            if ($('sectionCompare').style.display !== 'none' && Object.keys(comparisonData).length) refreshCompareView();
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           THEME TOGGLE
+           ════════════════════════════════════════════════════════════════ */
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            $('themeKnob').textContent = next === 'dark' ? '🌙' : '☀️';
+            storeSet('theme', next);
+        }
+
+        (function restoreTheme() {
+            const saved = storeGet('theme');
+            if (saved === 'dark' || saved === 'light') {
+                document.documentElement.setAttribute('data-theme', saved);
+                const knob = document.getElementById('themeKnob');
+                if (knob) knob.textContent = saved === 'dark' ? '🌙' : '☀️';
+            }
+        })();
+
+        /* ════════════════════════════════════════════════════════════════
+           INLINE ERRORS (replaces blocking alert() dialogs)
+           ════════════════════════════════════════════════════════════════ */
+        function showError(key, vars) {
+            lastError = { key, vars };
+            const box = $('formError');
+            box.textContent = '⚠️ ' + t(key, vars);
+            box.classList.add('is-visible');
+            return null;
+        }
+
+        function clearError() {
+            lastError = null;
+            const box = $('formError');
+            box.textContent = '';
+            box.classList.remove('is-visible');
+        }
+
+        // Strict whole-number parsing: '', '2.5', '1e3', 'abc' are all rejected
+        function parseIntStrict(raw) {
+            const s = String(raw).trim();
+            return /^-?\d+$/.test(s) ? Number(s) : NaN;
+        }
+
+        /**
+         * Read an integer input and validate its range.
+         * Returns the number, or null after showing an error.
+         * `def` (optional) is used when the field is left empty.
+         */
+        function readField(id, fieldKey, min, max, def) {
+            const el = $(id);
+            const raw = el.value.trim();
+            if (raw === '' && def !== undefined) return def;
+            const v = parseIntStrict(raw);
+            if (!Number.isInteger(v) || v < min || v > max) {
+                el.focus();
+                return showError('err.range', { field: t(fieldKey), min, max });
+            }
+            return v;
+        }
+
+        function readQuantum() {
+            return readField('inpQuantum', 'f.quantum', LIMITS.quantum[0], LIMITS.quantum[1]);
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           PRESETS — from Silberschatz Chapter 4
+           [arrival, burst, priority]
+           ════════════════════════════════════════════════════════════════ */
+        const PRESETS = {
+            fcfs1: { algo: 'fcfs', quantum: 4, procs: [[0, 24, 0], [0, 3, 0], [0, 3, 0]] },                      // p.24–25
+            sjf1: { algo: 'sjf', quantum: 4, procs: [[0, 6, 0], [0, 8, 0], [0, 7, 0], [0, 3, 0]] },              // p.30
+            sjf_preempt: { algo: 'sjf_preemptive', quantum: 4, procs: [[0, 8, 0], [1, 4, 0], [2, 9, 0], [3, 5, 0]] },              // p.36
+            rr1: { algo: 'rr', quantum: 4, procs: [[0, 24, 0], [0, 3, 0], [0, 3, 0]] },                      // p.40
+            priority1: { algo: 'priority', quantum: 4, procs: [[0, 10, 3], [0, 1, 1], [0, 2, 4], [0, 1, 5], [0, 5, 2]] },    // p.48
+            // p.48 data with staggered arrivals, so preemptive and non-preemptive priority give different schedules
+            priority_pre: { algo: 'priority_preemptive', quantum: 4, procs: [[0, 10, 3], [1, 1, 1], [2, 2, 4], [3, 1, 5], [4, 5, 2]] },
+            priority_rr: { algo: 'priority_rr', quantum: 2, procs: [[0, 4, 3], [0, 5, 2], [0, 8, 2], [0, 7, 1], [0, 3, 3]] },     // p.53
+        };
+
+        function loadPreset(name) {
+            const preset = PRESETS[name];
+            if (!preset) return;
+            clearProcesses();
+            $('selAlgo').value = preset.algo;
+            $('inpQuantum').value = preset.quantum;
+            preset.procs.forEach(([a, b, p]) => pushProcess(a, b, p));
+            renderProcessTable();
+            onAlgoChange();
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           PROCESS CRUD
+           ════════════════════════════════════════════════════════════════ */
+        function pushProcess(arrival, burst, priority) {
+            processes.push({
+                id: processIdSeq++,
+                name: `P${processes.length + 1}`,
+                arrival,
+                burst,
+                priority,
+                color: PALETTE[processes.length % PALETTE.length],
+            });
+        }
+
+        function addProcess() {
+            clearError();
+            if (processes.length >= LIMITS.maxProcs) return showError('err.maxProcs', { n: LIMITS.maxProcs });
+            const arrival = readField('inpArrival', 'f.arrival', LIMITS.arrival[0], LIMITS.arrival[1], 0);
+            if (arrival === null) return;
+            const burst = readField('inpBurst', 'f.burst', LIMITS.burst[0], LIMITS.burst[1]);
+            if (burst === null) return;
+            const priority = readField('inpPriority', 'f.priority', LIMITS.priority[0], LIMITS.priority[1], 0);
+            if (priority === null) return;
+            pushProcess(arrival, burst, priority);
+            renderProcessTable();
+            $('inpBurst').value = '';
+            $('inpBurst').focus();
+        }
+
+        function removeProcess(id) {
+            processes = processes.filter(p => p.id !== id);
+            reindexProcesses();
+            renderProcessTable();
+        }
+
+        function clearProcesses() {
+            processes = [];
+            processIdSeq = 1;
+            clearError();
+            renderProcessTable();
+            $('sectionResult').style.display = 'none';
+            $('sectionCompare').style.display = 'none';
+            animStop();
+        }
+
+        function reindexProcesses() {
+            processes.forEach((p, i) => {
+                p.name = `P${i + 1}`;
+                p.color = PALETTE[i % PALETTE.length];
+            });
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           RANDOM PROCESS GENERATOR
+           ════════════════════════════════════════════════════════════════ */
+        function showRandomGen() {
+            const panel = $('panelRandom');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function generateRandom() {
+            clearError();
+            // 0 is a valid value for Max Arrival / Max Priority (no `|| default` fallbacks)
+            const count = readField('randCount', 'f.count', LIMITS.count[0], LIMITS.count[1]); if (count === null) return;
+            const maxArr = readField('randMaxArr', 'f.maxArr', LIMITS.arrival[0], LIMITS.arrival[1]); if (maxArr === null) return;
+            const minBurst = readField('randMinBurst', 'f.minBurst', LIMITS.burst[0], LIMITS.burst[1]); if (minBurst === null) return;
+            const maxBurst = readField('randMaxBurst', 'f.maxBurst', LIMITS.burst[0], LIMITS.burst[1]); if (maxBurst === null) return;
+            const maxPri = readField('randMaxPri', 'f.maxPri', LIMITS.priority[0], LIMITS.priority[1]); if (maxPri === null) return;
+            if (minBurst > maxBurst) { $('randMinBurst').focus(); return showError('err.minMax'); }
+            const dist = $('randDist').value;
+
+            clearProcesses();
+            const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+            for (let i = 0; i < count; i++) {
+                const arrival = randInt(0, maxArr);
+                let burst;
+                if (dist === 'exponential') {
+                    // Exponential distribution (p.5: many short bursts, few long ones), scaled to the chosen range
+                    const mean = Math.max(1, (maxBurst - minBurst) / 4);
+                    burst = Math.min(maxBurst, minBurst + Math.floor(-Math.log(1 - Math.random()) * mean));
+                } else {
+                    burst = randInt(minBurst, maxBurst);
+                }
+                pushProcess(arrival, burst, randInt(0, maxPri));
+            }
+
+            renderProcessTable();
+            $('panelRandom').style.display = 'none';
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           UI HELPERS
+           ════════════════════════════════════════════════════════════════ */
+        function onAlgoChange() {
+            const algo = $('selAlgo').value;
+            $('grpQuantum').className = QUANTUM_ALGOS.includes(algo) ? 'form-group' : 'form-group is-dimmed';
+            $('grpPriority').className = PRIORITY_ALGOS.includes(algo) ? 'form-group' : 'form-group is-dimmed';
+            renderAlgoInfo();
+        }
+
+        function renderAlgoInfo() {
+            $('algoInfo').innerHTML = t(`info.${$('selAlgo').value}`);
+        }
+
+        function renderProcessTable() {
+            const tbody = $('tbodyProcesses');
+            if (!processes.length) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px;">${t('tbl.empty')}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = processes.map(p => `
+        <tr>
+            <td><span class="dot-color" style="background:${p.color}"></span>${p.name}</td>
+            <td>${p.arrival}</td>
+            <td>${p.burst}</td>
+            <td>${p.priority}</td>
+            <td><button class="btn--remove" onclick="removeProcess(${p.id})">${t('btn.remove')}</button></td>
+        </tr>`).join('');
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           SCHEDULING ALGORITHMS
+           Each returns { gantt, results } (+ queueTrace for RR-based ones:
+           queueTrace[t] = ready-queue PIDs in real FIFO order at time t)
+           ════════════════════════════════════════════════════════════════ */
+
+        function buildResult(p, start, finish) {
+            return {
+                name: p.name, arrival: p.arrival, burst: p.burst, priority: p.priority,
+                start, finish,
+                waiting: finish - p.arrival - p.burst,   // = turnaround − burst
+                turnaround: finish - p.arrival,
+                response: start - p.arrival,             // first run − arrival
+                color: p.color,
+            };
+        }
+
+        function emitIdle(gantt, time, target) {
+            if (time < target) {
+                gantt.push({ pid: null, start: time, end: target });
+                return target;
+            }
+            return time;
+        }
+
+        // ── FCFS ────────────────────────────────────────────────────────
+        function scheduleFCFS(procs) {
+            const sorted = [...procs].sort((a, b) => a.arrival - b.arrival || a.id - b.id);
+            const gantt = [], results = {};
+            let time = 0;
+            for (const p of sorted) {
+                time = emitIdle(gantt, time, p.arrival);
+                const start = time, end = start + p.burst;
+                gantt.push({ pid: p.id, name: p.name, start, end, color: p.color });
+                results[p.id] = buildResult(p, start, end);
+                time = end;
+            }
+            return { gantt, results };
+        }
+
+        // ── SJF (Non-preemptive) ────────────────────────────────────────
+        function scheduleSJF(procs) {
+            const pool = procs.map(p => ({ ...p, done: false }));
+            const gantt = [], results = {};
+            let time = 0, completed = 0;
+            while (completed < pool.length) {
+                const avail = pool.filter(p => !p.done && p.arrival <= time);
+                if (!avail.length) {
+                    const next = pool.filter(p => !p.done).sort((a, b) => a.arrival - b.arrival)[0];
+                    time = emitIdle(gantt, time, next.arrival);
+                    continue;
+                }
+                // shortest burst; ties → FCFS (p.29)
+                avail.sort((a, b) => a.burst - b.burst || a.arrival - b.arrival || a.id - b.id);
+                const p = avail[0];
+                const start = time, end = start + p.burst;
+                gantt.push({ pid: p.id, name: p.name, start, end, color: p.color });
+                results[p.id] = buildResult(p, start, end);
+                p.done = true;
+                time = end;
+                completed++;
+            }
+            return { gantt, results };
+        }
+
+        // ── Generic unit-time preemptive scheduler (SRTF, Priority-Pre) ─
+        // `key(p)` = selection key, smaller wins; ties → earlier arrival, then lower PID.
+        // The running process keeps the CPU on a tie (it arrived earlier), so no extra switch.
+        function schedulePreemptiveByKey(procs, key) {
+            const pool = procs.map(p => ({ ...p, rem: p.burst, firstStart: -1 }));
+            const gantt = [], results = {};
+            let time = 0, completed = 0;
+            const maxT = procs.reduce((s, p) => s + p.burst, 0) + Math.max(...procs.map(p => p.arrival)) + 1;
+            let prevPid = null, blockStart = 0;
+            while (completed < pool.length && time <= maxT) {
+                const avail = pool.filter(p => p.arrival <= time && p.rem > 0);
+                if (!avail.length) {
+                    const next = pool.filter(p => p.rem > 0).sort((a, b) => a.arrival - b.arrival)[0];
+                    if (!next) break;
+                    time = emitIdle(gantt, time, next.arrival);
+                    blockStart = time;
+                    continue;
+                }
+                avail.sort((a, b) => key(a) - key(b) || a.arrival - b.arrival || a.id - b.id);
+                const p = avail[0];
+                if (p.id !== prevPid) {
+                    if (prevPid !== null) flushBlock(gantt, pool, prevPid, blockStart, time);
+                    blockStart = time;
+                    prevPid = p.id;
+                }
+                if (p.firstStart < 0) p.firstStart = time;
+                p.rem--;
+                time++;
+                if (p.rem === 0) {
+                    gantt.push({ pid: p.id, name: p.name, start: blockStart, end: time, color: p.color });
+                    results[p.id] = buildResult(p, p.firstStart, time);
+                    completed++;
+                    prevPid = null;
+                    blockStart = time;
+                }
+            }
+            return { gantt, results };
+        }
+
+        // ── SJF Preemptive / SRTF (p.35–37) ─────────────────────────────
+        function scheduleSRTF(procs) {
+            return schedulePreemptiveByKey(procs, p => p.rem);
+        }
+
+        // ── Round Robin (p.38–41) ───────────────────────────────────────
+        function scheduleRR(procs, quantum) {
+            const q = quantum;
+            const pool = procs.map(p => ({ ...p, rem: p.burst, firstStart: -1 }));
+            const sorted = [...pool].sort((a, b) => a.arrival - b.arrival || a.id - b.id);
+            const queue = [], gantt = [], results = {}, queueTrace = [];
+            let time = 0, completed = 0, nextIdx = 0, iter = 0;
+            const admit = () => { while (nextIdx < sorted.length && sorted[nextIdx].arrival <= time) queue.push(sorted[nextIdx++]); };
+            admit();
+            while (completed < pool.length && iter < MAX_ITER) {
+                iter++;
+                if (!queue.length) {
+                    if (nextIdx >= sorted.length) break;
+                    time = emitIdle(gantt, time, sorted[nextIdx].arrival);
+                    admit();
+                }
+                const p = queue.shift();
+                if (p.firstStart < 0) p.firstStart = time;
+                const exec = Math.min(q, p.rem);
+                // record the real ready-queue order for every time unit of this slice
+                for (let tt = time; tt < time + exec; tt++) {
+                    const order = queue.map(x => x.id);
+                    for (let k = nextIdx; k < sorted.length && sorted[k].arrival <= tt; k++) order.push(sorted[k].id);
+                    queueTrace[tt] = order;
+                }
+                gantt.push({ pid: p.id, name: p.name, start: time, end: time + exec, color: p.color });
+                time += exec;
+                p.rem -= exec;
+                admit();                       // arrivals at `time` join before the preempted process
+                if (p.rem > 0) {
+                    queue.push(p);             // back to the tail (p.39)
+                } else {
+                    results[p.id] = buildResult(p, p.firstStart, time);
+                    completed++;
+                }
+            }
+            return { gantt, results, queueTrace };
+        }
+
+        // ── Priority (Non-preemptive) (p.47–48) ─────────────────────────
+        function schedulePriority(procs) {
+            const pool = procs.map(p => ({ ...p, done: false }));
+            const gantt = [], results = {};
+            let time = 0, completed = 0;
+            while (completed < pool.length) {
+                const avail = pool.filter(p => !p.done && p.arrival <= time);
+                if (!avail.length) {
+                    const next = pool.filter(p => !p.done).sort((a, b) => a.arrival - b.arrival)[0];
+                    time = emitIdle(gantt, time, next.arrival);
+                    continue;
+                }
+                // lower number = higher priority; ties → FCFS (p.47)
+                avail.sort((a, b) => a.priority - b.priority || a.arrival - b.arrival || a.id - b.id);
+                const p = avail[0];
+                const start = time, end = start + p.burst;
+                gantt.push({ pid: p.id, name: p.name, start, end, color: p.color });
+                results[p.id] = buildResult(p, start, end);
+                p.done = true;
+                time = end;
+                completed++;
+            }
+            return { gantt, results };
+        }
+
+        // ── Priority (Preemptive) (p.50) ────────────────────────────────
+        function schedulePriorityPre(procs) {
+            return schedulePreemptiveByKey(procs, p => p.priority);
+        }
+
+        // ── Priority + Round Robin (p.53–54) ────────────────────────────
+        // Highest priority runs; equal priorities share the CPU with RR (quantum q).
+        // A process alone at its level keeps running after its quantum (p.54).
+        // A newly arrived higher-priority process preempts; the preempted one goes to the tail of its level.
+        function schedulePriorityRR(procs, quantum) {
+            const q = quantum;
+            const pool = procs.map(p => ({ ...p, rem: p.burst, firstStart: -1 }));
+            const sorted = [...pool].sort((a, b) => a.arrival - b.arrival || a.id - b.id);
+            const levels = new Map();                     // priority → FIFO array
+            const gantt = [], results = {}, queueTrace = [];
+            let time = 0, completed = 0, nextIdx = 0;
+            let running = null, used = 0, blockStart = 0;
+            const maxT = procs.reduce((s, p) => s + p.burst, 0) + Math.max(...procs.map(p => p.arrival)) + 1;
+
+            const enqueue = (p) => {
+                if (!levels.has(p.priority)) levels.set(p.priority, []);
+                levels.get(p.priority).push(p);
+            };
+            const admit = () => { while (nextIdx < sorted.length && sorted[nextIdx].arrival <= time) enqueue(sorted[nextIdx++]); };
+            const bestLevel = () => {
+                let best = null;
+                for (const [pr, arr] of levels) if (arr.length && (best === null || pr < best)) best = pr;
+                return best;
+            };
+            const readyOrder = () => [...levels.keys()].sort((a, b) => a - b).flatMap(pr => levels.get(pr).map(p => p.id));
+
+            admit();
+            while (completed < pool.length && time <= maxT) {
+                if (running) {
+                    const bl = bestLevel();
+                    const higherArrived = bl !== null && bl < running.priority;
+                    const quantumUp = used >= q && bl !== null && bl === running.priority;
+                    if (higherArrived || quantumUp) {
+                        gantt.push({ pid: running.id, name: running.name, start: blockStart, end: time, color: running.color });
+                        enqueue(running);
+                        running = null;
+                    } else if (used >= q) {
+                        used = 0;                         // only runnable process at its level → keeps the CPU
+                    }
+                }
+                if (!running) {
+                    const bl = bestLevel();
+                    if (bl === null) {
+                        if (nextIdx >= sorted.length) break;
+                        time = emitIdle(gantt, time, sorted[nextIdx].arrival);
+                        admit();
+                        continue;
+                    }
+                    running = levels.get(bl).shift();
+                    used = 0;
+                    blockStart = time;
+                    if (running.firstStart < 0) running.firstStart = time;
+                }
+                queueTrace[time] = readyOrder();
+                running.rem--;
+                used++;
+                time++;
+                admit();
+                if (running.rem === 0) {
+                    gantt.push({ pid: running.id, name: running.name, start: blockStart, end: time, color: running.color });
+                    results[running.id] = buildResult(running, running.firstStart, time);
+                    completed++;
+                    running = null;
+                }
+            }
+            return { gantt, results, queueTrace };
+        }
+
+        function flushBlock(gantt, pool, pid, start, end) {
+            const p = pool.find(x => x.id === pid);
+            gantt.push({ pid, name: p.name, start, end, color: p.color });
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           DISPATCH
+           ════════════════════════════════════════════════════════════════ */
+        const ALGO_FN = {
+            fcfs: scheduleFCFS,
+            sjf: scheduleSJF,
+            sjf_preemptive: scheduleSRTF,
+            rr: scheduleRR,
+            priority: schedulePriority,
+            priority_preemptive: schedulePriorityPre,
+            priority_rr: schedulePriorityRR,
+        };
+
+        function dispatch(algo, procs, quantum) {
+            const fn = ALGO_FN[algo];
+            return QUANTUM_ALGOS.includes(algo) ? fn(procs, quantum) : fn(procs);
+        }
+
+        function algoLabel(algo, quantum) {
+            return ALGO_LABELS[algo] + (QUANTUM_ALGOS.includes(algo) ? ` (q=${quantum})` : '');
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           STATS — makespan, CPU utilization, throughput, context switches
+           Context switch = the CPU goes directly from one process to a
+           different process. Voluntary = the previous process finished;
+           nonvoluntary = it was preempted (Ch.4 p.16).
+           ════════════════════════════════════════════════════════════════ */
+        function computeStats(result, n) {
+            const g = result.gantt;
+            if (!g || !g.length) {
+                return { totalTime: 0, idleTime: 0, cpuUtil: 0, throughput: 0, contextSwitches: 0, voluntary: 0, nonvoluntary: 0 };
+            }
+            const totalTime = g[g.length - 1].end;     // schedule starts at t = 0
+            let idleTime = 0, voluntary = 0, nonvoluntary = 0, prev = null;
+            for (const b of g) {
+                if (b.pid === null) { idleTime += b.end - b.start; prev = null; continue; }
+                if (prev && prev.pid !== b.pid && prev.end === b.start) {
+                    if (result.results[prev.pid].finish === prev.end) voluntary++;
+                    else nonvoluntary++;
+                }
+                prev = b;
+            }
+            return {
+                totalTime,
+                idleTime,
+                cpuUtil: totalTime > 0 ? (totalTime - idleTime) / totalTime * 100 : 0,
+                throughput: totalTime > 0 ? n / totalTime : 0,
+                contextSwitches: voluntary + nonvoluntary,
+                voluntary,
+                nonvoluntary,
+            };
+        }
+
+        function averages(result) {
+            const vals = Object.values(result.results);
+            const n = vals.length || 1;
+            return {
+                avgWaiting: vals.reduce((s, v) => s + v.waiting, 0) / n,
+                avgTurnaround: vals.reduce((s, v) => s + v.turnaround, 0) / n,
+                avgResponse: vals.reduce((s, v) => s + v.response, 0) / n,
+            };
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           STEP-BY-STEP ANIMATION TIMELINE BUILDER
+           Snapshot at time t = state during the interval [t, t+1).
+           ════════════════════════════════════════════════════════════════ */
+        function readyComparator(algo, rem) {
+            const fifo = (a, b) => a.arrival - b.arrival || a.id - b.id;
+            switch (algo) {
+                case 'sjf': return (a, b) => a.burst - b.burst || fifo(a, b);
+                case 'sjf_preemptive': return (a, b) => rem.get(a.id) - rem.get(b.id) || fifo(a, b);
+                case 'priority':
+                case 'priority_preemptive':
+                case 'priority_rr': return (a, b) => a.priority - b.priority || fifo(a, b);
+                default: return fifo;
+            }
+        }
+
+        function queueHintKey(algo) {
+            return {
+                fcfs: 'qorder.fifo', rr: 'qorder.fifo', sjf: 'qorder.burst', sjf_preemptive: 'qorder.rem',
+                priority: 'qorder.pri', priority_preemptive: 'qorder.pri', priority_rr: 'qorder.prirr',
+            }[algo];
+        }
+
+        function buildAnimTimeline(result, procs, algo) {
+            const g = result.gantt;
+            if (!g || !g.length) return [];
+            const totalTime = g[g.length - 1].end;
+            const byId = new Map(procs.map(p => [p.id, p]));
+            const finish = new Map(procs.map(p => [p.id, result.results[p.id].finish]));
+            const rem = new Map(procs.map(p => [p.id, p.burst]));
+            const cmp = readyComparator(algo, rem);
+            const chip = (p) => ({
+                pid: p.id, name: p.name, color: p.color,
+                arrival: p.arrival, burst: p.burst, priority: p.priority,
+                rem: rem.get(p.id), finish: finish.get(p.id),
+            });
+            const timeline = [];
+            let bi = 0;
+
+            for (let t = 0; t <= totalTime; t++) {
+                while (bi < g.length && g[bi].end <= t) bi++;
+                const runningId = (bi < g.length && g[bi].start <= t && g[bi].pid !== null) ? g[bi].pid : null;
+
+                const completed = procs
+                    .filter(p => finish.get(p.id) <= t)
+                    .sort((a, b) => finish.get(a.id) - finish.get(b.id) || a.id - b.id);
+
+                const ready = procs.filter(p => p.arrival <= t && finish.get(p.id) > t && p.id !== runningId);
+                const trace = result.queueTrace && result.queueTrace[t];
+                if (trace) {
+                    const pos = new Map(trace.map((id, i) => [id, i]));
+                    const at = (p) => (pos.has(p.id) ? pos.get(p.id) : Infinity);
+                    ready.sort((a, b) => (at(a) - at(b)) || cmp(a, b));
+                } else {
+                    ready.sort(cmp);
+                }
+
+                timeline.push({
+                    time: t,
+                    running: runningId !== null ? chip(byId.get(runningId)) : null,
+                    readyQueue: ready.map(chip),
+                    completed: completed.map(chip),
+                    // only blocks that have actually started (no zero-length blocks)
+                    ganttUpTo: g.filter(b => b.start < t).map(b => ({ ...b, end: Math.min(b.end, t) })),
+                });
+
+                if (runningId !== null) rem.set(runningId, rem.get(runningId) - 1);
+            }
+            return timeline;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           ANIMATION CONTROLS
+           ════════════════════════════════════════════════════════════════ */
+        function animStop() {
+            animPlaying = false;
+            if (animInterval) clearInterval(animInterval);
+            animInterval = null;
+            const btn = $('btnAnimPlay');
+            if (btn) btn.textContent = t('anim.play');
+        }
+
+        function animStartTimer() {
+            if (animInterval) clearInterval(animInterval);
+            animInterval = setInterval(() => {
+                if (animCurrentTime < animTimeline.length - 1) {
+                    animCurrentTime++;
+                    renderAnimFrame();
+                } else {
+                    animStop();
+                }
+            }, animSpeed);
+        }
+
+        function animTogglePlay() {
+            if (animPlaying) { animStop(); return; }
+            if (animCurrentTime >= animTimeline.length - 1) {   // at the end → replay from t = 0
+                animCurrentTime = 0;
+                renderAnimFrame();
+            }
+            animPlaying = true;
+            $('btnAnimPlay').textContent = t('anim.pause');
+            animStartTimer();
+        }
+
+        function animStepFwd() {
+            animStop();
+            if (animCurrentTime < animTimeline.length - 1) {
+                animCurrentTime++;
+                renderAnimFrame();
+            }
+        }
+
+        function animStepBack() {
+            animStop();
+            if (animCurrentTime > 0) {
+                animCurrentTime--;
+                renderAnimFrame();
+            }
+        }
+
+        function animReset() {
+            animStop();
+            animCurrentTime = 0;
+            renderAnimFrame();
+        }
+
+        function animUpdateSpeed() {
+            animSpeed = parseInt($('animSpeed').value, 10) || 500;
+            if (animPlaying) animStartTimer();
+        }
+
+        function renderAnimFrame() {
+            if (!animTimeline.length) return;
+            const snap = animTimeline[animCurrentTime];
+            $('animTimeDisplay').textContent = snap.time;
+            const pct = animTimeline.length > 1 ? (animCurrentTime / (animTimeline.length - 1)) * 100 : 100;
+            $('animProgressBar').style.width = pct + '%';
+            renderPipeline(snap);
+            if (snap.ganttUpTo.length) {
+                renderGantt(snap.ganttUpTo, $('ganttTrack'), $('ganttTimeline'), MIN_BLOCK_PX, ganttAnimateOnce);
+                ganttAnimateOnce = false;
+            } else {
+                $('ganttTrack').innerHTML = `<div style="padding:20px;color:var(--text-3)">${t('gantt.empty')}</div>`;
+                $('ganttTimeline').innerHTML = '';
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           PIPELINE RENDERING
+           ════════════════════════════════════════════════════════════════ */
+        function chipDetails(p, stage) {
+            const item = (label, v, hl) => `<span class="${hl ? 'pipeline__meta-hl' : ''}">${label} <b>${v}</b></span>`;
+            const parts = [
+                item(t('pipe.arrival'), p.arrival),
+                item(t('pipe.burst'), p.burst),
+                item(t('pipe.priority'), p.priority),
+            ];
+            parts.push(stage === 'completed' ? item(t('pipe.finish'), p.finish, true) : item(t('pipe.rem'), p.rem, true));
+            return `<span class="pipeline__meta">${parts.join('')}</span>`;
+        }
+
+        function chipHtml(p, stage, isNew, extraStyle = '') {
+            return `<div class="pipeline__item${isNew ? ' is-new' : ''}" style="background:${p.color};${extraStyle}">
+        <span class="pipeline__name">${p.name}${stage === 'completed' ? ' ✓' : ''}</span>${chipDetails(p, stage)}
+    </div>`;
+        }
+
+        function renderPipeline(snap) {
+            const empty = (txt) => `<div class="pipeline__empty">${txt}</div>`;
+            // only chips that just moved into a stage get the slide-in animation (no flashing on every frame)
+            const prev = pipePrev;
+
+            $('pipeReadyCount').textContent = snap.readyQueue.length;
+            $('pipeReadyHint').textContent = lastSingle ? t(queueHintKey(lastSingle.algo)) : '';
+            $('pipeReadyItems').innerHTML = snap.readyQueue.length
+                ? snap.readyQueue.map(p => chipHtml(p, 'ready', !prev.ready.has(p.pid))).join('')
+                : empty(t('pipe.empty'));
+
+            $('pipeRunningItems').innerHTML = snap.running
+                ? chipHtml(snap.running, 'running', prev.running !== snap.running.pid)
+                : empty(t('pipe.idle'));
+
+            $('pipeCompCount').textContent = snap.completed.length;
+            $('pipeCompItems').innerHTML = snap.completed.length
+                ? snap.completed.map(p => chipHtml(p, 'completed', !prev.completed.has(p.pid), 'opacity:0.75;')).join('')
+                : empty('—');
+
+            pipePrev = {
+                ready: new Set(snap.readyQueue.map(p => p.pid)),
+                running: snap.running ? snap.running.pid : null,
+                completed: new Set(snap.completed.map(p => p.pid)),
+            };
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           PER-PROCESS TIMELINE
+           ════════════════════════════════════════════════════════════════ */
+        function renderProcessTimeline(gantt, procs) {
+            const container = $('procTimeline');
+            if (!gantt || !gantt.length || !procs.length) {
+                container.innerHTML = `<div style="color:var(--text-3);padding:16px;text-align:center;">${t('gantt.none')}</div>`;
+                return;
+            }
+
+            const totalTime = gantt[gantt.length - 1].end;
+            let html = '';
+
+            for (const proc of procs) {
+                const states = new Array(totalTime).fill('idle');
+                for (let t0 = 0; t0 < Math.min(proc.arrival, totalTime); t0++) states[t0] = 'notarrived';
+
+                let lastFinish = 0;
+                for (const block of gantt) {
+                    if (block.pid === proc.id) {
+                        for (let t0 = block.start; t0 < block.end && t0 < totalTime; t0++) states[t0] = 'running';
+                        lastFinish = Math.max(lastFinish, block.end);
+                    }
+                }
+                for (let t0 = proc.arrival; t0 < lastFinish && t0 < totalTime; t0++) {
+                    if (states[t0] === 'idle') states[t0] = 'waiting';
+                }
+
+                const segments = [];
+                let cur = { state: states[0], start: 0, len: 1 };
+                for (let t0 = 1; t0 < totalTime; t0++) {
+                    if (states[t0] === cur.state) cur.len++;
+                    else { segments.push(cur); cur = { state: states[t0], start: t0, len: 1 }; }
+                }
+                segments.push(cur);
+
+                html += `<div class="proc-timeline__row">
+            <div class="proc-timeline__label" style="color:${proc.color}">${proc.name}</div>
+            <div class="proc-timeline__track">`;
+                for (const seg of segments) {
+                    const bgStyle = seg.state === 'running' ? `background:${proc.color};` : '';
+                    let label = '';
+                    if (seg.state === 'running' && seg.len >= 2) label = 'R';
+                    if (seg.state === 'waiting' && seg.len >= 2) label = 'W';
+                    html += `<div class="proc-timeline__segment proc-timeline__segment--${seg.state}"
+                style="flex:${seg.len};${bgStyle}"
+                title="${proc.name}: ${t('ptl.state.' + seg.state)} (${seg.start}–${seg.start + seg.len})">${label}</div>`;
+                }
+                html += `</div></div>`;
+            }
+
+            html += `<div class="proc-timeline__ticks">`;
+            const step = totalTime <= 30 ? 1 : totalTime <= 60 ? 2 : totalTime <= 150 ? 5 : 10;
+            for (let t0 = 0; t0 <= totalTime; t0 += step) {
+                html += `<div class="proc-timeline__tick" style="flex:${step};min-width:0">${t0}</div>`;
+            }
+            html += `</div>`;
+
+            html += `<div class="proc-timeline__legend">
+        <div class="proc-timeline__legend-item">
+            <div class="proc-timeline__legend-swatch" style="background:#22C55E;"></div> ${t('ptl.running')}
         </div>
-      </section>
-
-      <!-- VIEW 2: ALGORITHM COMPARISON -->
-      <section class="tab-view" id="view-comparison">
-        <div class="comparison-header-card glass-panel">
-          <div class="comp-title-wrap">
-            <h2>เปรียบเทียบอัลกอริทึมทั้งหมดบนชุดข้อมูลเดียวกัน (Algorithm Benchmark)</h2>
-            <p>ประมวลผลอัลกอริทึมทั้ง 8 รูปแบบพร้อมกันด้วย Process ชุดปัจจุบัน เพื่อเปรียบเทียบค่า Waiting Time และ Turnaround Time</p>
-          </div>
-          <button class="btn btn-primary" id="btn-refresh-compare">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/></svg>
-            คำนวณใหม่ (Refresh)
-          </button>
+        <div class="proc-timeline__legend-item">
+            <div class="proc-timeline__legend-swatch" style="background:repeating-linear-gradient(45deg,rgba(245,158,11,0.5),rgba(245,158,11,0.5) 3px,transparent 3px,transparent 6px);border:1px solid rgba(245,158,11,0.5);"></div> ${t('ptl.waiting')}
         </div>
-
-        <!-- Benchmark Ranking Bar Chart Card -->
-        <div class="card glass-panel mb-6">
-          <div class="card-header">
-            <h3 class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              การจัดอันดับเวลารอเฉลี่ย (Average Waiting Time Ranking)
-            </h3>
-          </div>
-          <div class="card-body">
-            <div class="benchmark-bars-container" id="comparison-bars-chart">
-              <!-- Dynamically rendered -->
-            </div>
-          </div>
+        <div class="proc-timeline__legend-item">
+            <div class="proc-timeline__legend-swatch" style="background:#64748B;border:1px solid var(--border);"></div> ${t('ptl.idle')}
         </div>
+    </div>`;
 
-        <div class="card glass-panel mb-6">
-          <div class="card-header">
-            <h3 class="card-title">ตารางเปรียบเทียบประสิทธิภาพ (Comparison Leaderboard)</h3>
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="data-table" id="table-comparison">
-                <thead>
-                  <tr>
-                    <th>อัลกอริทึม (Algorithm)</th>
-                    <th>Average Waiting Time (WT)</th>
-                    <th>Average Turnaround Time (TAT)</th>
-                    <th>Average Response Time (RT)</th>
-                    <th>CPU Utilization</th>
-                    <th>Throughput</th>
-                    <th>Total Time</th>
-                  </tr>
-                </thead>
-                <tbody id="comparison-table-body">
-                  <!-- Populated dynamically -->
-                </tbody>
-              </table>
-            </div>
-          </div>
+            container.innerHTML = html;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           SIMULATION — SINGLE
+           ════════════════════════════════════════════════════════════════ */
+        function runSimulation() {
+            clearError();
+            if (!processes.length) return showError('err.noProc');
+            const algo = $('selAlgo').value;
+            let quantum = null;
+            if (QUANTUM_ALGOS.includes(algo)) {
+                quantum = readQuantum();
+                if (quantum === null) return;
+            }
+
+            animStop();
+            const result = dispatch(algo, processes, quantum);
+            lastSingle = { algo, quantum, result, stats: computeStats(result, processes.length) };
+
+            $('sectionResult').style.display = 'block';
+            $('sectionCompare').style.display = 'none';
+
+            animTimeline = buildAnimTimeline(result, processes, algo);
+            animCurrentTime = animTimeline.length - 1;   // start at the end (full result)
+            ganttAnimateOnce = true;
+            pipePrev = { ready: new Set(), running: null, completed: new Set() };
+            refreshSingleView();
+
+            $('sectionResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function refreshSingleView() {
+            const { algo, quantum, result, stats } = lastSingle;
+            $('txtResultTitle').textContent = t('result.title', { algo: algoLabel(algo, quantum) });
+            renderStatsGrid(stats, $('statsGrid'), processes.length);
+            renderAnimFrame();
+            renderProcessTimeline(result.gantt, processes);
+            renderResultsTable(result.results);
+        }
+
+        function renderStatsGrid(stats, container, n) {
+            const unit = (u) => `<span style="font-size:0.7rem;opacity:0.6;"> ${u}</span>`;
+            container.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-card__label">${t('st.makespan')}</div>
+            <div class="stat-card__value stat-card__value--indigo">${stats.totalTime}${unit('ms')}</div>
         </div>
-
-        <!-- Comparative Stacked Gantt Charts -->
-        <div class="card glass-panel">
-          <div class="card-header">
-            <h3 class="card-title">เปรียบเทียบ Gantt Chart แต่ละอัลกอริทึมแบบเคียงข้าง (Visual Comparison)</h3>
-          </div>
-          <div class="card-body">
-            <div class="mini-gantts-list" id="comparison-gantts-list">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
+        <div class="stat-card">
+            <div class="stat-card__label">${t('st.util')}</div>
+            <div class="stat-card__value stat-card__value--emerald">${stats.cpuUtil.toFixed(1)}${unit('%')}</div>
         </div>
-      </section>
-
-      <!-- VIEW 3: THEORY & FORMULAS (Course Knowledge) -->
-      <section class="tab-view" id="view-theory">
-        <div class="theory-grid">
-          <!-- Theory Card 1: Criteria -->
-          <div class="card glass-panel">
-            <div class="card-header">
-              <h3 class="card-title">1. เกณฑ์การจัดตารางเวลา (Scheduling Criteria)</h3>
-            </div>
-            <div class="card-body theory-content">
-              <ul>
-                <li><strong>CPU Utilization:</strong> เปอร์เซ็นต์ที่ CPU ใช้งานจริง ไม่ว่างเปล่า (เป้าหมาย 40% - 90%)</li>
-                <li><strong>Throughput:</strong> จำนวน Process ที่เสร็จสิ้นต่อหน่วยเวลา</li>
-                <li><strong>Turnaround Time (TAT):</strong> เวลาตั้งแต่ส่ง Process เข้ามา ($AT$) จนประมวลผลเสร็จสิ้น ($CT$):
-                  <div class="formula-box">$$TAT = CT - AT$$</div>
-                </li>
-                <li><strong>Waiting Time (WT):</strong> เวลารวมที่ Process ต้องรออยู่ใน Ready Queue:
-                  <div class="formula-box">$$WT = TAT - BT$$</div>
-                </li>
-                <li><strong>Response Time (RT):</strong> เวลาตั้งแต่ส่ง Process เข้ามา จนถึงเริ่มได้รับการประมวลผลครั้งแรก ($ST_{first}$):
-                  <div class="formula-box">$$RT = ST_{first} - AT$$</div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Theory Card 2: Preemptive vs Nonpreemptive -->
-          <div class="card glass-panel">
-            <div class="card-header">
-              <h3 class="card-title">2. Preemptive vs Non-preemptive</h3>
-            </div>
-            <div class="card-body theory-content">
-              <p>การตัดสินใจจัดตารางเวลาของ CPU เกิดขึ้นได้ 4 กรณี:</p>
-              <ol>
-                <li>Process เปลี่ยนจาก Running &rarr; Waiting (เช่น ขอ I/O)</li>
-                <li>Process เปลี่ยนจาก Running &rarr; Ready (เช่น ถูก Interrupt หรือหมด Time Quantum)</li>
-                <li>Process เปลี่ยนจาก Waiting &rarr; Ready (เช่น I/O เสร็จสิ้น)</li>
-                <li>Process จบการทำงาน (Terminates)</li>
-              </ol>
-              <p><strong>Non-preemptive:</strong> ตัดสินใจเฉพาะข้อ 1 และ 4 เท่านั้น เมื่อได้ CPU แล้วจะรันจนกว่าจะยอมปล่อยเอง</p>
-              <p><strong>Preemptive:</strong> สามารถแย่ง CPU คืนได้ในข้อ 2 และ 3 ทันทีที่ Process สำคัญกว่าหรือมี Burst สั้นกว่าเข้ามา</p>
-            </div>
-          </div>
-
-          <!-- Theory Card 3: Convoy Effect & SJF Optimality -->
-          <div class="card glass-panel">
-            <div class="card-header">
-              <h3 class="card-title">3. Convoy Effect & SJF Optimality</h3>
-            </div>
-            <div class="card-body theory-content">
-              <p><strong>Convoy Effect (ใน FCFS):</strong> เมื่อ Process งานยาว (CPU-bound) ได้เข้าทำก่อน ทำให้ Process งานสั้นๆ (I/O-bound) ต้องต่อคิวนาน ส่งผลให้ค่า Average Waiting Time พุ่งสูงมาก และ I/O devices ว่างเปล่า</p>
-              <p><strong>SJF Is Provably Optimal:</strong> การนำงานสั้นมาทำก่อนให้ผลลัพธ์ Average Waiting Time ที่ <em>ต่ำที่สุดในเชิงทฤษฎี</em> เสมอ เพราะลดเวลารอของงานสั้นได้มากกว่าการเพิ่มเวลารอของงานยาว</p>
-            </div>
-          </div>
-
-          <!-- Theory Card 4: MLFQ Design & Starvation Prevention -->
-          <div class="card glass-panel">
-            <div class="card-header">
-              <h3 class="card-title">4. MLFQ & Aging</h3>
-            </div>
-            <div class="card-body theory-content">
-              <p><strong>Indefinite Blocking / Starvation:</strong> Process ความสำคัญต่ำอาจไม่ได้รันเลยหากมีงานที่มี Priority สูงเข้ามาเรื่อยๆ</p>
-              <p><strong>Aging Solution:</strong> เพิ่มระดับ Priority ให้ Process ที่รอนานขึ้นเรื่อยๆ ตามกาลเวลา จนกลายเป็นงานสำคัญที่สุด</p>
-              <p><strong>Multilevel Feedback Queue (MLFQ):</strong>
-                <br>• Queue 0: Round Robin ($q=8$ ms)
-                <br>• Queue 1: Round Robin ($q=16$ ms)
-                <br>• Queue 2: FCFS
-                <br><em>Process ใหม่เข้า Q0 หากใช้ CPU เกิน Quantum จะถูกลดระดับลงไปคิวล่าง!</em>
-              </p>
-            </div>
-          </div>
+        <div class="stat-card">
+            <div class="stat-card__label">${t('st.throughput')}</div>
+            <div class="stat-card__value stat-card__value--cyan">${stats.throughput.toFixed(3)}${unit('/ms')}</div>
+            <div class="stat-card__sub">${t('st.throughputSub', { n, t: stats.totalTime })}</div>
         </div>
-      </section>
-    </main>
-
-    <!-- Global Floating Tooltip for Gantt -->
-    <div class="gantt-tooltip" id="gantt-tooltip"></div>
-  </div>
-
-  <!-- Formula Breakdown Modal Dialog -->
-  <div class="modal-backdrop" id="formula-modal">
-    <div class="modal-card glass-panel">
-      <div class="modal-header">
-        <div class="modal-title-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <h3>วิธีคำนวณสูตรและขั้นตอนแจกแจงละเอียด</h3>
+        <div class="stat-card">
+            <div class="stat-card__label">${t('st.cs')}</div>
+            <div class="stat-card__value stat-card__value--cs">${stats.contextSwitches}</div>
+            <div class="stat-card__sub">${t('st.csSub', { v: stats.voluntary, nv: stats.nonvoluntary })}</div>
         </div>
-        <button class="btn-icon" id="btn-close-formula-modal" aria-label="ปิดหน้าต่าง">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" id="formula-modal-content">
-        <!-- Rendered dynamically by UIController -->
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary btn-sm" id="btn-close-formula-footer">ปิดหน้าต่าง</button>
-      </div>
-    </div>
-  </div>
+        <div class="stat-card">
+            <div class="stat-card__label">${t('st.idle')}</div>
+            <div class="stat-card__value stat-card__value--idle">${stats.idleTime}${unit('ms')}</div>
+        </div>`;
+        }
 
-  <!-- JavaScript Entry Point -->
-  <script type="module" src="js/app.js"></script>
+        /* ════════════════════════════════════════════════════════════════
+           SIMULATION — COMPARE ALL
+           ════════════════════════════════════════════════════════════════ */
+        function runAllAndCompare() {
+            clearError();
+            if (!processes.length) return showError('err.noProc');
+            const quantum = readQuantum();          // used by RR and Priority + RR
+            if (quantum === null) return;
+
+            animStop();
+            compQuantum = quantum;
+            comparisonData = {};
+            for (const algo of ALL_ALGO_KEYS) {
+                const res = dispatch(algo, processes, quantum);
+                comparisonData[algo] = {
+                    ...res,
+                    ...averages(res),
+                    label: algoLabel(algo, quantum),
+                    stats: computeStats(res, processes.length),
+                };
+            }
+
+            $('sectionResult').style.display = 'none';
+            $('sectionCompare').style.display = 'block';
+            refreshCompareView(true);
+            $('sectionCompare').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function refreshCompareView(animate = false) {
+            renderCompTable();
+            renderCompGantts(animate);
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           RENDERING — GANTT CHART
+           ════════════════════════════════════════════════════════════════ */
+        function renderGantt(gantt, trackEl, tlEl, minPx = MIN_BLOCK_PX, animate = false) {
+            trackEl.classList.toggle('is-animated', animate);
+            if (!gantt?.length) {
+                trackEl.innerHTML = `<div style="padding:20px;color:var(--text-3)">${t('gantt.none')}</div>`;
+                tlEl.innerHTML = '';
+                return;
+            }
+            trackEl.innerHTML = gantt.map((b, i) => {
+                const dur = b.end - b.start;
+                const idle = b.pid === null;
+                const ci = idle ? -1 : processes.findIndex(p => p.id === b.pid) % 10;
+                const tip = idle ? `${t('gantt.idle')}: ${b.start}→${b.end}` : `${b.name}: ${b.start}→${b.end} (${dur} ms)`;
+                return `<div class="gantt__block ${idle ? 'gantt__block--idle' : `pc-${ci}`}"
+                     style="flex:${dur};min-width:${minPx}px;${animate ? `animation-delay:${Math.min(i * 0.06, 1.5)}s` : ''}"
+                     data-tip="${tip}">${idle ? t('gantt.idle') : b.name}</div>`;
+            }).join('');
+
+            tlEl.innerHTML = '';
+            for (const b of gantt) {
+                const d = document.createElement('div');
+                d.className = 'gantt__tick';
+                d.style.flex = b.end - b.start;
+                d.style.minWidth = minPx + 'px';
+                d.textContent = b.start;
+                tlEl.appendChild(d);
+            }
+            const last = document.createElement('div');
+            last.className = 'gantt__tick';
+            last.style.flex = '0';
+            last.style.minWidth = '0';
+            last.textContent = gantt[gantt.length - 1].end;
+            tlEl.appendChild(last);
+        }
+
+        function renderGanttInto(gantt, container, minPx = MIN_BLOCK_PX_S, animate = false) {
+            if (!gantt?.length) return;
+            const track = document.createElement('div');
+            track.className = 'gantt__track';
+            const tl = document.createElement('div');
+            tl.className = 'gantt__timeline';
+            container.appendChild(track);
+            container.appendChild(tl);
+            renderGantt(gantt, track, tl, minPx, animate);
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           RENDERING — RESULTS TABLE
+           ════════════════════════════════════════════════════════════════ */
+        function renderResultsTable(results) {
+            const order = new Map(processes.map((p, i) => [p.id, i]));
+            const vals = Object.entries(results)
+                .sort(([a], [b]) => order.get(Number(a)) - order.get(Number(b)))
+                .map(([, r]) => r);
+            const n = vals.length;
+            let html = vals.map(r => `
+        <tr>
+            <td><span class="dot-color" style="background:${r.color}"></span>${r.name}</td>
+            <td>${r.arrival}</td><td>${r.burst}</td><td>${r.priority}</td>
+            <td>${r.start}</td><td>${r.finish}</td>
+            <td>${r.waiting}</td><td>${r.turnaround}</td><td>${r.response}</td>
+        </tr>`).join('');
+            const avg = (key) => (vals.reduce((s, v) => s + v[key], 0) / n).toFixed(2);
+            html += `<tr class="avg-row">
+        <td colspan="6" style="text-align:right;font-family:Inter,sans-serif;">${t('res.avg')}</td>
+        <td>${avg('waiting')}</td><td>${avg('turnaround')}</td><td>${avg('response')}</td>
+    </tr>`;
+            $('tbodyResults').innerHTML = html;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           RENDERING — COMPARISON
+           ════════════════════════════════════════════════════════════════ */
+        const EPS = 1e-9;
+
+        function renderCompTable() {
+            $('theadCompare').innerHTML = `<tr>
+        <th>${t('th.algorithm')}</th><th>${t('th.avgW')}</th><th>${t('th.avgT')}</th>
+        <th>${t('th.avgR')}</th><th>${t('th.cs')}</th>
+    </tr>`;
+
+            const min = (f) => Math.min(...ALL_ALGO_KEYS.map(a => f(comparisonData[a])));
+            const minW = min(d => d.avgWaiting);
+            const minT = min(d => d.avgTurnaround);
+            const minR = min(d => d.avgResponse);
+            const minC = min(d => d.stats.contextSwitches);
+            const hl = (v, best) => Math.abs(v - best) < EPS ? 'color:var(--emerald);font-weight:800;' : '';
+
+            $('tbodyCompare').innerHTML = ALL_ALGO_KEYS.map(a => {
+                const d = comparisonData[a];
+                return `<tr>
+            <td style="text-align:left;font-family:Inter,sans-serif;font-weight:600;">${d.label}</td>
+            <td style="${hl(d.avgWaiting, minW)}">${d.avgWaiting.toFixed(2)}</td>
+            <td style="${hl(d.avgTurnaround, minT)}">${d.avgTurnaround.toFixed(2)}</td>
+            <td style="${hl(d.avgResponse, minR)}">${d.avgResponse.toFixed(2)}</td>
+            <td style="${hl(d.stats.contextSwitches, minC)}">${d.stats.contextSwitches}</td>
+        </tr>`;
+            }).join('');
+        }
+
+        function renderCompGantts(animate = false) {
+            const wrap = $('compGantts');
+            wrap.innerHTML = '';
+            for (const algo of ALL_ALGO_KEYS) {
+                const box = document.createElement('div');
+                box.className = 'gantt';
+                box.style.marginBottom = '12px';
+                const lbl = document.createElement('div');
+                lbl.className = 'gantt__label';
+                lbl.textContent = comparisonData[algo].label;
+                box.appendChild(lbl);
+                renderGanttInto(comparisonData[algo].gantt, box, MIN_BLOCK_PX_S, animate);
+                wrap.appendChild(box);
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           INIT
+           ════════════════════════════════════════════════════════════════ */
+        (function init() {
+            const savedLang = storeGet('lang');
+            lang = I18N[savedLang] ? savedLang : 'en';
+            onAlgoChange();
+            applyLang();
+        })();
+
+        // Floating tooltip for Gantt blocks — positioned in the viewport, so it is never clipped
+        const ganttTip = document.createElement('div');
+        ganttTip.className = 'gantt-tip';
+        ganttTip.setAttribute('role', 'tooltip');
+        document.body.appendChild(ganttTip);
+
+        function placeGanttTip(block) {
+            ganttTip.textContent = block.dataset.tip;
+            ganttTip.classList.add('is-visible');
+            const r = block.getBoundingClientRect();
+            const tw = ganttTip.offsetWidth, th = ganttTip.offsetHeight;
+            const x = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+            const y = r.top - th - 8 >= 8 ? r.top - th - 8 : r.bottom + 8;
+            ganttTip.style.left = x + 'px';
+            ganttTip.style.top = y + 'px';
+        }
+
+        document.addEventListener('mouseover', (e) => {
+            const block = e.target.closest && e.target.closest('.gantt__block[data-tip]');
+            if (block) placeGanttTip(block);
+            else ganttTip.classList.remove('is-visible');
+        });
+        window.addEventListener('scroll', () => ganttTip.classList.remove('is-visible'), { passive: true });
+
+        // Enter key to quickly add processes
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && ['inpBurst', 'inpArrival', 'inpPriority'].includes(document.activeElement?.id)) {
+                addProcess();
+            }
+        });
+    </script>
 </body>
+
 </html>
