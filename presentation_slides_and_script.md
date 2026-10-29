@@ -98,29 +98,33 @@
 
 ---
 
-#### Slide 4: Flexible Process Setup & Textbook Presets
-* **Slide Title:** Process Setup & Built-in Textbook Presets
-* **Visual:** Setup UI + Random Generator Panel
+#### Slide 4: Flexible Process Setup & 11 Built-in Test Presets
+* **Slide Title:** Process Setup & 11 Built-in Test Presets
+* **Visual:** Process Input Table + 11 Test Preset Chips Bar + Random Generator Panel
 
 ![Slide 2 Input Random](slides_assets/slide2_input_random.png)
 
 * **Key Points on Slide:**
-  * **Textbook Presets:** 1-click loading of exact textbook problems (Silberschatz pp. 25, 30, 36, 40, 48, 53).
-  * **Custom Input:** Arrival Time ($0-100$), Burst Time ($1-50$), Priority ($0-99$), Quantum ($1-50$).
-  * **Random Generator:** Generates realistic test cases using Uniform or Exponential distribution (modeling real-world short I/O bursts).
-  * **Bilingual Support:** Instant switch between English and Thai, with Light/Dark theme.
+  * **11 One-Click Test Presets (แถบปุ่มทดสอบสำเร็จรูป 11 ชุด):**
+    * *Canonical Textbook Presets:* **FCFS (p.25)**, **SJF (p.30)**, **SRTF (p.36)**, **RR q=4 (p.40)**, **Priority (p.48)**, **Priority + RR (p.53)**.
+    * *Critical Edge-Case Presets:* **FCFS Convoy Effect (3,3,24)**, **FCFS CPU Idle Gap**, **SJF Tie-breaking (Equal BT)**, **RR Small Quantum (q=1)**, **Priority Preemptive (with arrivals)**.
+  * **Custom Process Entry:** Add/delete processes with Arrival Time ($0-100$), Burst Time ($1-50$), and Priority ($0-99$).
+  * **Realistic Workload Generator:** Generate reproducible workloads using Uniform or Exponential distributions.
+  * **Accessibility & Language:** Toggle between English and Thai, with full keyboard navigation and high-contrast theme.
 
 **🗣️ Speaker 2 Script (English):**
-> *"To make testing effortless, we included built-in presets directly from the Silberschatz textbook. With a single click, students can verify textbook examples like FCFS convoy effect or SRTF preemption.*  
-> *Users can also add custom processes or use our **Random Process Generator**.*  
-> *Notice that we provide both **Uniform** and **Exponential** distributions. In real operating systems, most CPU bursts are very short, which is accurately modeled by the exponential setting.*  
-> *Now, let's watch Speaker 3 demonstrate the live simulation in action."*
+> *"To make testing effortless, we provide a complete row of **11 Test Presets** right at the top of the interface.*  
+> *These chips cover both canonical textbook problems—such as page 25 FCFS, page 36 SRTF, and page 40 Round Robin—and critical edge cases like the Convoy Effect, CPU Idle gaps, and Tie-breaking.*  
+> *With a single click on any chip, the system instantly populates arrival times, burst times, and priorities, ready to simulate.*  
+> *Users can also add custom processes manually or generate realistic workloads with our **Random Process Generator**.*  
+> *Now, let's watch Speaker 3 demonstrate the live simulation using one of these presets."*
 
 **🇹🇭 คำแปลภาษาไทย (สำหรับตรวจสอบความหมาย):**
-> *"เพื่อให้การทดสอบสะดวกที่สุด เราได้ใส่ปุ่ม Preset ตัวอย่างจากหนังสือเรียน Silberschatz มาให้ เพียงคลิกเดียวก็สามารถโหลดโจทย์จากหนังสือมาดูผลลัพธ์ได้ทันที เช่น ปรากฏการณ์ Convoy Effect ใน FCFS หรือการ Preempt ใน SRTF ครับ*  
-> *นอกจากนี้ ผู้ใช้ยังสามารถเพิ่ม process เองตามต้องการ หรือใช้ **ระบบสุ่ม Process (Random Generator)** ก็ได้*  
-> *ซึ่งมีทั้งการกระจายแบบ **Uniform** และแบบ **Exponential** ซึ่งจำลองสภาพความเป็นจริงของ OS ที่โปรแกรมส่วนใหญ่มักมี CPU burst สั้นๆ ได้อย่างสมจริงครับ*  
-> *ต่อไป ขอเชิญผู้พูดคนที่ 3 แสดงการจำลองการทำงานจริง (Live Demo) ให้ชมครับ"*
+> *"เพื่อให้การทดสอบสะดวกรวดเร็วที่สุด ด้านบนของหน้าจอจะมีแถบ **Test Presets ทั้งหมด 11 ชุด** ให้เลือกใช้งานครับ*  
+> *ซึ่งครอบคลุมทั้งโจทย์มาตรฐานจากหนังสือ เช่น FCFS หน้า 25, SRTF หน้า 36, และ Round Robin หน้า 40 ไปจนถึงชุดทดสอบกรณีพิเศษ (Edge Cases) เช่น ปรากฏการณ์ Convoy Effect, ช่วงเวลา CPU Idle, และกรณีเวลาเท่ากัน (Tie-breaking) ครับ*  
+> *เพียงคลิกที่ปุ่มชิป Preset ใดปุ่มหนึ่ง ระบบจะกรอก Arrival Time, Burst Time, และ Priority ให้ครบถ้วนพร้อมจำลองทันที*  
+> *นอกจากนี้ ยังสามารถปรับแต่งตัวเลขเอง หรือใช้ **ระบบสุ่ม Process (Random Generator)** แบบ Uniform และ Exponential เพื่อจำลอง burst สั้น ๆ ของระบบจริงได้ด้วยครับ*  
+> *ต่อไป ขอเชิญผู้พูดคนที่ 3 สาธิตการรันจริงบน Preset ให้ชมครับ"*
 
 ---
 
@@ -139,7 +143,7 @@
   * **Completed:** Shows finished processes with completion timestamps.
 
 **🗣️ Speaker 3 Script (English):**
-> *`[Action: On the screen, click preset "SRTF · 8,4,9,5 (p.36)" and click "Run Simulation"]`*  
+> *`[Action: On the screen, click the preset chip "SRTF · 8,4,9,5 (p.36)" from the Test Presets row and click "Run Simulation" (or press Space)]`*  
 > *"Thank you. Let's see the simulator in action!  
 > *Here, we loaded the textbook example for **SRTF**. When we click Run, our simulator doesn't just show static final numbers. It provides a full **Step-by-Step playback**.*  
 > *`[Action: Click Step Forward until t = 1, then t = 5]`*  
@@ -147,7 +151,7 @@
 > *The **CPU Pipeline** clearly shows the Ready Queue on the left, the running CPU in the middle, and completed tasks on the right. Notice how the Ready Queue automatically sorts itself based on remaining time!"*
 
 **🇹🇭 คำแปลภาษาไทย (สำหรับตรวจสอบความหมาย):**
-> *`[ท่าทาง: คลิก Preset "SRTF · 8,4,9,5 (p.36)" แล้วกดปุ่ม "Run Simulation"]`*  
+> *`[ท่าทาง: คลิกที่ปุ่มชิป Preset "SRTF · 8,4,9,5 (p.36)" จากแถบ Test Presets ด้านบน แล้วกดปุ่ม "Run Simulation" (หรือกดปุ่ม Space)]`*  
 > *"ขอบคุณครับ ตอนนี้เรามาดูการทำงานจริงของโปรแกรมกันครับ!  
 > *เราได้โหลดตัวอย่างโจทย์ **SRTF** จากหนังสือขึ้นมา เมื่อกด Run โปรแกรมของเราไม่ได้แสดงแค่ตัวเลขผลลัพธ์นิ่งๆ แต่มีระบบ **เล่นทีละขั้นตอน (Step-by-Step)** ครับ*  
 > *`[ท่าทาง: กดปุ่ม Next เพื่อเลื่อนเวลาไปที่ t = 1 และ t = 5]`*  
@@ -241,7 +245,7 @@
 > *"นี่คือหนึ่งในฟีเจอร์ที่ทรงพลังที่สุดของเว็บเราครับ นั่นคือปุ่ม **Compare All (เปรียบเทียบทุกอัลกอริทึม)***  
 > *เพียงคลิกเดียว ระบบจะนำชุด process เดียวกันไปรันบนทุกอัลกอริทึมพร้อมๆ กันทันทีครับ*  
 > *สังเกตในตารางเปรียบเทียบนะครับ: ค่าที่ดีที่สุดในแต่ละคอลัมน์จะถูกไฮไลต์ด้วยสีเขียวโดยอัตโนมัติ*  
-> *สำหรับตัวอย่างนี้ SRTF ชนะเลิศด้วยค่าเฉลี่ยเวลารอคอยต่ำสุดเพียง 6.5 ms เทียบกับ SJF ปกติที่ได้ 7.75 ms และ FCFS ที่สูงถึง 10.25 ms*  
+> *สำหรับตัวอย่างนี้ SRTF ชนะเลิศด้วยค่าเฉลี่ยเวลารอคอยต่ำสุดเพียง 6.5 ms เทียบกับ SJF ปกติที่ได้ 7.75 ms และ FCFS ที่ได้ 8.75 ms*  
 > *และด้านล่าง เรามีแผนภาพ Gantt Chart ของทุกอัลกอริทึมเรียงซ้อนกัน ทำให้เห็นความแตกต่างของโครงสร้างการจัดคิวได้ทันทีครับ  
 > *ต่อไป ขอเชิญผู้พูดคนที่ 5 สรุปข้อคิดและบทเรียนสำคัญในระบบจริงครับ"*
 
