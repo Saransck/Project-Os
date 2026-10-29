@@ -1644,12 +1644,6 @@
         <!-- ═══════════════════════════════════════════════════════════
          PROCESS INPUT
          ═══════════════════════════════════════════════════════════ -->
-        <!-- System Assumptions Banner -->
-        <div class="assumptions-banner" role="note" aria-label="Simulation Assumptions">
-            <div><strong data-i18n="assump.title"></strong> <span data-i18n="assump.text"></span></div>
-            <div style="opacity: 0.85; font-size: 0.78rem;" data-i18n="kbd.tip"></div>
-        </div>
-
         <section id="sectionInput">
             <div class="section-title">
                 <div class="section-title__icon">📝</div>
@@ -2347,8 +2341,8 @@
 
         function animTogglePlay() {
             if (animPlaying) { animStop(); return; }
-            if (animCurrentTime >= animTimeline.length - 1) {   // at the end → replay from t = 0
-                animCurrentTime = 0;
+            if (animCurrentTime >= animTimeline.length - 1) {   // at the end → replay from t = 1
+                animCurrentTime = Math.min(1, animTimeline.length - 1);
                 renderAnimFrame();
             }
             animPlaying = true;
@@ -2374,7 +2368,7 @@
 
         function animReset() {
             animStop();
-            animCurrentTime = 0;
+            animCurrentTime = Math.min(1, animTimeline.length - 1);
             renderAnimFrame();
         }
 
@@ -2548,7 +2542,7 @@
             $('sectionCompare').style.display = 'none';
 
             animTimeline = buildAnimTimeline(result, processes, algo);
-            animCurrentTime = animTimeline.length - 1;   // start at the end (full result)
+            animCurrentTime = Math.min(1, animTimeline.length - 1);   // start at t = 1
             ganttAnimateOnce = true;
             pipePrev = { ready: new Set(), running: null, completed: new Set() };
             refreshSingleView();
