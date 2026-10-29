@@ -4,7 +4,7 @@
 > **วิชา:** 03603332 Operating Systems (บทที่ 4: CPU Scheduling)  
 > **ภาควิชา:** วิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยเกษตรศาสตร์ วิทยาเขตศรีราชา  
 > **เวลารวม:** 10:00 นาที (แบ่ง 5 คน คนละ ~2 นาที)  
-> **รูปแบบ:** สไลด์บรรยาย + สลับหน้าจอ Live Interactive Web Demo  
+> **รูปแบบ:** สไลด์บรรยาย (12 สไลด์ตาม PDF) + สลับหน้าจอ Live Interactive Web Demo  
 
 ---
 
@@ -12,11 +12,11 @@
 
 | ผู้บรรยาย | เวลา | ช่วงสไลด์ / หน้าจอ | หัวข้อหลัก | คิวการเดโมบนหน้าเว็บ (Live Action) |
 | :--- | :---: | :---: | :--- | :--- |
-| **Speaker 1** | 0:00 – 2:00 | สไลด์ 1 & 2 | เกริ่นนำ, วัตถุประสงค์ & ปัญหา CPU-I/O Burst | แนะนำระบบ, ชี้วงจร Burst Cycle |
-| **Speaker 2** | 2:00 – 4:00 | สไลด์ 3 & 4 | อัลกอริทึม 7 แบบ & แถบ 6 Test Presets บนเว็บ | ชี้แถบ 6 Test Presets, ระบบสุ่ม |
-| **Speaker 3** | 4:00 – 6:00 | **Live Demo 1** | CPU Pipeline, แอนิเมชัน & กล่องบอกเหตุผล | **คลิก Preset SRTF (p.36) กด Run, ก้าว $t=0 \rightarrow 1 \rightarrow 5$** |
-| **Speaker 4** | 6:00 – 8:00 | **Live Demo 2** | สูตรวัดผล ($TAT, WT, RT$) & ตารางเปรียบเทียบ | **คลิก Compare All, ชี้ตาราง Best Value** |
-| **Speaker 5** | 8:00 – 10:00 | สไลด์ 9 & 10 | 3 ข้อแลกเปลี่ยนทางวิศวกรรม, สรุป & Q&A | สรุปบทเรียน OS, เปิดเวทีรับคำถามสด |
+| **Speaker 1** | 0:00 – 2:00 | สไลด์ 1 & 2 | เกริ่นนำกลุ่ม 16, วัตถุประสงค์ & วงจร CPU-I/O Burst | แนะนำระบบ, ชี้วงจร Burst Cycle (01–04) |
+| **Speaker 2** | 2:00 – 4:00 | สไลด์ 3 & 4 | 7 อัลกอริทึม & แถบ 6 Presets + ระบบสุ่ม | ชี้แถบ 6 Test Presets, ระบบสุ่ม Uniform/Exp |
+| **Speaker 3** | 4:00 – 6:00 | **Live Demo 1** | สไลด์ 5 & 6 (Pipeline & Visualizing States) | **คลิก Preset SRTF (p.36) กด Run, ก้าว $t=0 \rightarrow 1 \rightarrow 5$** |
+| **Speaker 4** | 6:00 – 8:00 | **Live Demo 2** | สไลด์ 7 & 8 (สูตรวัดผล & ตารางเปรียบเทียบ) | **คลิก Compare All, ชี้ 4 ตัวชี้วัด & Best Value $\bigstar$** |
+| **Speaker 5** | 8:00 – 10:00 | สไลด์ 9 – 12 | 3 ข้อแลกเปลี่ยนทางวิศวกรรม, สรุป & Q&A | สรุปบทเรียน OS, เปิดสไลด์ทีมกลุ่ม 16 & รับคำถาม |
 
 ---
 
@@ -27,20 +27,20 @@
 
 * **🗣️ English Script:**
   > *"Good morning, Professor and everyone.*  
-  > *Today, our team presents the **CPU Scheduling Simulator**.*  
+  > *We are **Group 16**, presenting the **CPU Scheduling Simulator**.*  
   > *In any computer system, the CPU is the most critical resource.*  
   > *In a single-core system, only one process can execute at a time.*  
   > *Our tool makes abstract operating system concepts visual and interactive."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *"สวัสดีอาจารย์และเพื่อนๆ ทุกคนครับ วันนี้กลุ่มของพวกเรายินดีอย่างยิ่งที่จะมานำเสนอเว็บแอปพลิเคชัน **CPU Scheduling Simulator** ครับ*  
+  > *"สวัสดีอาจารย์และเพื่อนๆ ทุกคนครับ พวกเรา**กลุ่มที่ 16** ยินดีอย่างยิ่งที่จะมานำเสนอ **CPU Scheduling Simulator** ครับ*  
   > *ในระบบคอมพิวเตอร์ CPU ถือเป็นทรัพยากรหลัก แต่ระบบแบบ single-core จะมี process รันได้เพียงตัวเดียวในแต่ละขณะเท่านั้น*  
   > *เป้าหมายของพวกเราคือการสร้างเครื่องมือจำลองที่เปลี่ยนทฤษฎีการจัดคิว ให้เห็นเป็นภาพเคลื่อนไหวจริงและคำนวณเปรียบเทียบได้ทันทีครับ"*
 
 ---
 
-### 📌 สไลด์ 2: ทำไมต้องจัดตารางเวลา CPU? (CPU-I/O Burst Cycle)
-* **🎬 Action Cue:** `[สลับไปสไลด์ 2 ชี้ภาพวงจร CPU burst สลับกับ I/O burst]`
+### 📌 สไลด์ 2: ทำไมต้องจัดตารางเวลา CPU? (Why CPU Scheduling Matters: 01–04)
+* **🎬 Action Cue:** `[สลับไปสไลด์ 2 ชี้ภาพวงจร CPU burst สลับกับ I/O burst และ 4 ขั้นตอนบนสไลด์]`
 
 * **🗣️ English Script:**
   > *"Why do we need CPU scheduling?*  
@@ -61,15 +61,15 @@
 
 ## 👤 SPEAKER 2 (2:00 – 4:00): อัลกอริทึมและชุดข้อมูลทดสอบ
 
-### 📌 สไลด์ 3: 7 อัลกอริทึมที่ระบบรองรับ (Algorithm Taxonomy)
-* **🎬 Action Cue:** `[สลับไปสไลด์ 3 ชี้แบ่งกลุ่ม Non-Preemptive กับ Preemptive บนตาราง]`
+### 📌 สไลด์ 3: 7 อัลกอริทึมที่ระบบรองรับ (Supported Scheduling Algorithms)
+* **🎬 Action Cue:** `[สลับไปสไลด์ 3 ชี้แบ่งกล่อง Non-Preemptive ทางซ้าย กับ Preemptive ทางขวา]`
 
 * **🗣️ English Script:**
   > *"Thank you, Speaker 1.*  
   > *Our simulator implements 7 scheduling algorithms across two core classes.*  
   > *First, **Non-preemptive algorithms**, including **FCFS**, **Shortest-Job-First (SJF)**, and **Priority**.*  
   > *Here, a running process keeps the CPU until completion.*  
-  > *Second, **Preemptive algorithms**, including **SRTF**, **Round Robin**, **Priority Preemptive**, and **Priority + RR hybrid**.*  
+  > *Second, **Preemptive algorithms**, including **SRTF**, **Round Robin**, **Priority Preemptive**, and the **Priority + RR hybrid**.*  
   > *The OS can interrupt the running task when a shorter job arrives, or when the **Time Quantum** expires."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
@@ -80,20 +80,20 @@
 
 ---
 
-### 📌 สไลด์ 4: แถบ Test Presets และการป้อนข้อมูล (Setup & Presets)
-* **🎬 Action Cue:** `[สลับหน้าจอไปที่หน้า Web App ชี้แถบปุ่ม Test Presets 6 ปุ่มด้านบน]`
+### 📌 สไลด์ 4: แถบ Test Presets และการป้อนข้อมูล (Process Setup & Presets)
+* **🎬 Action Cue:** `[สลับหน้าจอไปที่หน้า Web App ชี้แถบปุ่ม Test Presets 6 ปุ่มด้านบน และแผงสุ่มข้อมูล]`
 
 * **🗣️ English Script:**
   > *"To make testing effortless, we provide **6 one-click Test Presets** right at the top.*  
   > *These cover benchmarks like **FCFS**, **Convoy Effect**, **SJF**, **SRTF**, **Round Robin**, and **Priority**.*  
   > *Clicking any preset instantly loads all arrival times, bursts, and priorities.*  
-  > *Users can also add custom processes or use our **Random Generator**.*  
+  > *Users can also add custom processes or use our **Random Generator** with **Uniform or Exponential distributions** to model short I/O bursts.*  
   > *Now, Speaker 3 will demonstrate a live simulation using the SRTF preset."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
   > *"เพื่อให้การทดสอบในห้องเรียนสะดวกรวดเร็ว ด้านบนของเว็บจะมีแถบ **Test Presets ทั้งหมด 6 ปุ่มหลัก** ให้คลิกใช้งานทันทีครับ*  
   > *ครอบคลุมโจทย์มาตรฐานครบถ้วน ทั้ง FCFS, ปรากฏการณ์ Convoy Effect, SJF, SRTF, Round Robin, และ Priority ครับ*  
-  > *เพียงคลิกปุ่มเดียว ระบบจะกรอกข้อมูลพร้อมจำลองทันที หรือจะเพิ่มข้อมูลเองและใช้ **Random Generator** ก็ได้ครับ*  
+  > *เพียงคลิกปุ่มเดียว ระบบจะกรอกข้อมูลพร้อมจำลองทันที หรือจะป้อนข้อมูลเอง และใช้ระบบสุ่มทั้งแบบ **Uniform หรือ Exponential** เพื่อจำลองงาน I/O ในโลกจริงก็ได้ครับ*  
   > *ต่อไป ขอเชิญผู้พูดคนที่ 3 สาธิตการรันจริงบนชุดทดสอบ SRTF ครับ"*
 
 ---
@@ -128,29 +128,31 @@
 
 ---
 
-### 📌 สไลด์ 6 / หน้าเว็บ: Gantt Chart vs. Per-Process Timeline
-* **🎬 Action Cue:** `[เลื่อนหน้าจอลงมาที่แผนภูมิ Gantt Chart และแถบ Per-Process Timeline ด้านล่าง]`
+### 📌 สไลด์ 6 / หน้าเว็บ: Visualizing Process States (Gantt Chart vs. Timeline)
+* **🎬 Action Cue:** `[ชี้ Gantt Chart ด้านบน แล้วชี้แถบ Per-Process Timeline ด้านล่าง -> Hover เมาส์บนแท่ง Timeline หรือ Gantt โชว์ Tooltip สดๆ บนจอ]`
 
 * **🗣️ English Script:**
-  > *"Directly below the pipeline, we provide two synchronized visual charts.*  
-  > *First is the macro **Gantt Chart**, showing CPU ownership across time.*  
-  > *Second is our unique **Per-Process Timeline**.*  
-  > *While Gantt shows what the CPU is doing, the Timeline shows what **each individual process** is doing.*  
-  > *Solid colors with **'R'** indicate Running, while striped bars with **'W'** indicate Waiting.*  
-  > *Now, Speaker 4 will demonstrate performance metrics and the Compare All showdown."*
+  > *"Below, we visualize execution through two synchronized views:*  
+  > *1. **Gantt Chart (Macro):** Shows CPU allocation over time.*  
+  > *2. **Per-Process Timeline (Micro):** Shows each individual process across all time units.*  
+  > *Solid bars with **'R'** mean Running; striped bars with **'W'** mean Waiting.*  
+  > *Hovering over any block reveals exact timing tooltips.*  
+  > *Next, Speaker 4 will present performance metrics."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *"ถัดลงมาจาก Pipeline เรามีแผนภูมิแสดงผลคู่ขนาน 2 ระดับครับ:*  
-  > *ด้านบนคือ **Gantt Chart** แสดงภาพรวมว่า CPU กำลังรันงานของใคร*  
-  > *และด้านล่างคือ **Timeline ราย Process** ที่บอกว่าแต่ละตัวกำลังทำอะไรอยู่*  
-  > *แถบสีทึบพร้อมตัวอักษร **'R'** คือช่วงที่ได้รันจริง และแถบลายทแยงพร้อมตัวอักษร **'W'** คือช่วงที่กำลังรอในคิว ทำให้เห็นเวลารอคอยได้อย่างชัดเจนครับ*  
-  > *ต่อไป ขอส่งต่อให้ผู้พูดคนที่ 4 เจาะลึกตัวเลขและตารางเปรียบเทียบทุกอัลกอริทึมครับ"*
+  > *`[ท่าทาง: ชี้ Gantt Chart แล้วชี้แถบ Per-Process Timeline ด้านล่าง -> เอาเมาส์ Hover บนแท่ง Timeline หรือ Gantt โชว์ Tooltip]`*  
+  > *"ด้านล่างเราแสดงผล 2 มุมมองคู่ขนานกันครับ:*  
+  > *1. **Gantt Chart (Macro):** แสดงการจัดสรร CPU ตลอดช่วงเวลา*  
+  > *2. **Per-Process Timeline (Micro):** แสดงสถานะของแต่ละ Process ตลอดทุกหน่วยเวลา*  
+  > *แถบสีทึบ **'R'** คือ Running และแถบลายทแยง **'W'** คือ Waiting ในคิว*  
+  > *เมื่อเอาเมาส์ Hover บนแท่ง Gantt หรือ Timeline จะแสดง **Tooltip** บอกช่วงเวลาทำงานทันทีครับ*  
+  > *ต่อไป ขอเชิญผู้พูดคนที่ 4 สรุปตัวชี้วัดและตารางเปรียบเทียบครับ"*
 
 ---
 
 ## 👤 SPEAKER 4 (6:00 – 8:00): Live Demo (Part 2) — ตัวชี้วัดและการเปรียบเทียบ
 
-### 📌 สไลด์ 7 / หน้าเว็บ: การคำนวณตัวชี้วัด (Metrics & Formulas)
+### 📌 สไลด์ 7 / หน้าเว็บ: การคำนวณตัวชี้วัด (How We Measure Scheduler Performance)
 * **🎬 Action Cue:** `[เลื่อนหน้าจอลงมาชี้ที่กล่องสรุปสถิติด้านบน และตารางผลลัพธ์ราย Process ด้านล่าง]`
 
 * **🗣️ English Script:**
@@ -159,18 +161,18 @@
   > *1. **Turnaround Time ($TAT = CT - AT$):** Total elapsed time from arrival to completion.*  
   > *2. **Waiting Time ($WT = TAT - BT$):** Total duration spent waiting inside the Ready Queue.*  
   > *3. **Response Time ($RT = \text{First Run} - AT$):** Time until the first CPU allocation, vital for interactive systems.*  
-  > *We also track **CPU Utilization (%)**, **Throughput**, and separate voluntary from preemptive **Context Switches**."*
+  > *We also track **CPU Utilization (%)**, **Throughput**, and separate **Voluntary switches** from **Nonvoluntary preemptions**."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
   > *"ขอบคุณผู้พูดคนที่ 3 ครับ ในการประเมินคุณภาพของอัลกอริทึม โปรแกรมของเราคำนวณตามสูตรมาตรฐานอย่างแม่นยำครับ:*  
   > *1. **Turnaround Time ($CT - AT$):** เวลารวมตั้งแต่เข้าสู่ระบบจนทำงานเสร็จ*  
   > *2. **Waiting Time ($TAT - BT$):** เวลาที่ต้องนั่งรออยู่ใน Ready Queue*  
   > *3. **Response Time ($\text{First Run} - AT$):** เวลาตั้งแต่มาถึงจนได้แตะ CPU แวบแรก ซึ่งสำคัญมากสำหรับความรู้สึกของผู้ใช้งาน*  
-  > *นอกจากนี้ยังคำนวณ **CPU Utilization (%)**, **Throughput**, และนับจำนวน **Context Switch** ให้อีกด้วยครับ"*
+  > *นอกจากนี้ยังคำนวณ **CPU Utilization (%)**, **Throughput**, และนับจำนวน **Context Switch** โดยแยกทั้ง **Voluntary** คืองานเสร็จเอง และ **Nonvoluntary** ที่โดนแย่ง CPU ครับ"*
 
 ---
 
-### 📌 สไลด์ 8 / หน้าเว็บ: ปุ่ม "Compare All" เปรียบเทียบทุกอัลกอริทึม
+### 📌 สไลด์ 8 / หน้าเว็บ: ปุ่ม "Compare All" (Side-by-Side Algorithm Showdown)
 * **🎬 Action Cue:** `[คลิกปุ่ม "📊 Compare All Algorithms" สีม่วง -> เลื่อนหน้าจอลงมาที่ตารางเปรียบเทียบ ชี้แถว SRTF ที่มีดาวเขียว ★]`
 
 * **🗣️ English Script:**
@@ -196,34 +198,36 @@
 
 ## 👤 SPEAKER 5 (8:00 – 10:00): ข้อแลกเปลี่ยนทางวิศวกรรมและสรุป
 
-### 📌 สไลด์ 9: 3 ข้อแลกเปลี่ยนสำคัญในระบบปฏิบัติการ (OS Trade-Offs)
+### 📌 สไลด์ 9: 3 ข้อแลกเปลี่ยนสำคัญในระบบปฏิบัติการ (Key Insights & Engineering Trade-Offs)
 * **🎬 Action Cue:** `[สลับไปสไลด์ 9 สรุป 3 ประเด็นหลักบนจอ]`
 
 * **🗣️ English Script:**
   > *"Thank you, Speaker 4.*  
   > *From our interactive experiments, we draw three critical OS engineering trade-offs:*  
   > *1. **The Convoy Effect in FCFS:** A single CPU-bound job makes short I/O jobs wait, killing system responsiveness.*  
-  > *2. **Time Quantum in Round Robin:** If $q$ is too large, it degrades into FCFS. If $q$ is too small, context switch overhead eats up CPU time.*  
+  > *2. **Time Quantum Dilemma in Round Robin:** If $q$ is too large, it degrades into FCFS; if too small, context switch overhead dominates. As a rule of thumb, **80% of CPU bursts should be shorter than $q$**.*  
   > *3. **Starvation vs. Aging:** Priority and SJF can starve long processes indefinitely. Real OS resolve this using **Aging**—gradually increasing the priority of waiting jobs."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
   > *"ขอบคุณผู้พูดคนที่ 4 ครับ จากการทดลองบนโปรแกรมจำลองนี้ เราสรุปข้อแลกเปลี่ยนทางวิศวกรรมจริงได้ 3 ข้อครับ:*  
   > *ข้อแรก **Convoy Effect ใน FCFS:** งานคำนวณยาวตัวเดียว สามารถฉุดรั้งงาน I/O สั้น ๆ ให้ค้างทั้งระบบ*  
-  > *ข้อสอง **การเลือก Time Quantum ใน Round Robin:** ถ้า $q$ ใหญ่เกินไปจะถอยหลังกลายเป็น FCFS แต่ถ้าเล็กเกินไป CPU จะเสียเวลาไปกับ Context Switch ฟรี ๆ*  
+  > *ข้อสอง **การเลือก Time Quantum ใน Round Robin:** ถ้า $q$ ใหญ่เกินไปจะถอยหลังกลายเป็น FCFS แต่ถ้าเล็กเกินไป CPU จะเสียเวลาไปกับ Context Switch ฟรี ๆ ซึ่งตามหลักแล้ว **80% ของงานคำนวณควรต้องสั้นกว่าค่า $q$** ครับ*  
   > *ข้อสาม **Starvation ใน Priority:** งานสำคัญน้อยอาจไม่ได้รันเลย ซึ่ง OS ยุคใหม่แก้ด้วยเทคนิค **Aging** หรือการค่อย ๆ เพิ่ม Priority ให้งานที่รอนานครับ"*
 
 ---
 
-### 📌 สไลด์ 10: สรุปสถาปัตยกรรมระบบและเปิดรับคำถาม (Wrap-up & Q&A)
-* **🎬 Action Cue:** `[สลับหน้าจอกลับมาที่ตัว Web App ค้างไว้ สบตากรรมการ เปิดเวทีรับคำถาม]`
+### 📌 สไลด์ 10, 11 & 12: สรุปสถาปัตยกรรม, ขอบคุณ และแนะนำสมาชิก (Conclusion & Q&A)
+* **🎬 Action Cue:** `[สลับไปสไลด์ 10 สรุปเทคโนโลยี -> สลับไปสไลด์ 11 Thank You -> สลับไปสไลด์ 12 แสดงรายชื่อสมาชิกกลุ่ม 16 ทั้ง 5 คน ค้างไว้ที่จอ สบตากรรมการ เปิดเวทีรับคำถาม]`
 
 * **🗣️ English Script:**
   > *"To conclude, our application is built with **Pure HTML5, CSS Grid, and Vanilla JavaScript**, with zero external heavy frameworks.*  
   > *It features an automated test suite of 13 unit tests, runs with zero build setup, and supports full English and Thai localization.*  
-  > *Thank you very much for your time and attention.*  
+  > *`[Action: Transition to Slide 11 & 12 - Member List]`*  
+  > *On behalf of Group 16, thank you very much for your time and attention.*  
   > *We are now ready to answer your questions and test any custom numbers live on screen!"*
 
 * **🇹🇭 คำพูดภาษาไทย:**
   > *"สรุปส่งท้ายนะครับ เว็บแอปพลิเคชันของเราพัฒนาด้วย **Pure HTML5, CSS Grid และ Vanilla JavaScript** 100% โดยไม่มีการพึ่งพา framework ภายนอก*  
   > *มีชุดทดสอบ Unit Test 13 ชุดรับประกันความถูกต้อง ไม่ต้องติดตั้งโปรแกรมเพิ่ม และรองรับทั้งภาษาไทยและอังกฤษอย่างสมบูรณ์ครับ*  
-  > *กลุ่มของพวกเราขอขอบคุณอาจารย์และเพื่อน ๆ ทุกท่านครับ และตอนนี้พวกเราพร้อมตอบทุกคำถาม หรือทดลองกรอกตัวเลขท้าทายเพื่อรันสดให้ดูได้เลยครับ ขอบคุณครับ"*
+  > *`[ท่าทาง: เลื่อนไปสไลด์ 11 Thank You และสไลด์ 12 แสดงรายชื่อสมาชิกกลุ่ม 16 ทั้ง 5 คน]`*  
+  > *ในนามของกลุ่มที่ 16 ขอขอบคุณอาจารย์และเพื่อน ๆ ทุกท่านครับ และตอนนี้พวกเราพร้อมตอบทุกคำถาม หรือทดลองกรอกตัวเลขท้าทายเพื่อรันสดให้ดูได้เลยครับ ขอบคุณครับ"*
