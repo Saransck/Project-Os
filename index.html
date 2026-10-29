@@ -2701,18 +2701,14 @@
         function renderCompTable() {
             $('theadCompare').innerHTML = `<tr>
         <th>${t('th.algorithm')}</th><th>${t('th.avgW')}</th><th>${t('th.avgT')}</th>
-        <th>${t('th.avgR')}</th><th>${t('th.cs')}</th><th>${t('th.util')}</th><th>${t('th.makespan')}</th><th>${t('th.throughput')}</th>
+        <th>${t('th.avgR')}</th><th>${t('th.cs')}</th>
     </tr>`;
 
             const min = (f) => Math.min(...ALL_ALGO_KEYS.map(a => f(comparisonData[a])));
-            const max = (f) => Math.max(...ALL_ALGO_KEYS.map(a => f(comparisonData[a])));
             const minW = min(d => d.avgWaiting);
             const minT = min(d => d.avgTurnaround);
             const minR = min(d => d.avgResponse);
             const minC = min(d => d.stats.contextSwitches);
-            const maxU = max(d => d.stats.cpuUtil);
-            const minM = min(d => d.stats.totalTime);
-            const maxTp = max(d => d.stats.throughput);
 
             // WCAG AA: Highlight using both star badge + bold + color (not color alone)
             const formatCell = (val, isBest, suffix = '') => {
@@ -2728,9 +2724,6 @@
             <td>${formatCell(d.avgTurnaround, Math.abs(d.avgTurnaround - minT) < EPS)}</td>
             <td>${formatCell(d.avgResponse, Math.abs(d.avgResponse - minR) < EPS)}</td>
             <td>${formatCell(d.stats.contextSwitches, d.stats.contextSwitches === minC)}</td>
-            <td>${formatCell(d.stats.cpuUtil, Math.abs(d.stats.cpuUtil - maxU) < EPS, '%')}</td>
-            <td>${formatCell(d.stats.totalTime, d.stats.totalTime === minM, ' ms')}</td>
-            <td>${formatCell(d.stats.throughput, Math.abs(d.stats.throughput - maxTp) < EPS)}</td>
         </tr>`;
             }).join('');
         }
