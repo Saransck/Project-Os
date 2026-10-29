@@ -96,23 +96,27 @@
 ## 👤 SPEAKER 3 (4:00 – 6:00): Live Demo (Part 1) — ไปป์ไลน์และเหตุผลการจัดคิว
 
 ### 📌 สไลด์ 5 / หน้าเว็บ: CPU Pipeline & Step-by-Step Playback
-* **🎬 Action Cue:** `[คลิกปุ่ม Preset "SRTF · 8,4,9,5 (p.36)" บนเว็บ -> กดปุ่ม Next (หรือกดแป้นลูกศรขวา ->) ไปที่เวลา t = 1 และ t = 5]`
+* **🎬 Action Cue:** `[คลิกปุ่ม Preset "SRTF · 8,4,9,5 (p.36)" บนเว็บ -> หน้าจอเริ่มที่ t = 0 (P1 ครอง CPU) -> กดปุ่ม Next หรือลูกศรขวา (→) ไปที่ t = 1 ชี้กล่องเหตุผล -> กด Step ต่อไปที่ t = 5]`
 
 * **🗣️ English Script:**
-  > *`[Action: Click preset "SRTF · 8,4,9,5 (p.36)", then step forward to t = 1]`*  
+  > *`[Action: Click preset "SRTF · 8,4,9,5 (p.36)" — the simulator starts at t = 0]`*  
   > *"Thank you. Let's see the simulator in action!*  
-  > *We just loaded the benchmark for **SRTF**. Watch what happens at time $t = 1$:*  
-  > *P1 was running, but P2 arrived with a burst of only 4. Because 4 is less than P1's remaining 7, the CPU preempts P1 and switches to P2.*  
-  > *Notice our real-time **Decision Reason Box**: it clearly explains *why* the scheduler made this choice.*  
-  > *The **CPU Pipeline** shows Ready Queue on the left, running core in the middle, and completed jobs on the right."*
+  > *We loaded the benchmark for **SRTF**. Notice that at time $t = 0$, only P1 has arrived, so P1 occupies the CPU.*  
+  > *`[Action: Press Arrow Right (→) to step to t = 1]`*  
+  > *Now look at time $t = 1$: P2 arrives with a burst of 4. Because 4 is strictly less than P1's remaining 7, the scheduler preempts P1 and gives the CPU to P2!*  
+  > *Notice our real-time **Decision Reason Box**: it immediately explains *why* the preemption happened.*  
+  > *`[Action: Step forward to t = 5]`*  
+  > *By time $t = 5$, P2 finishes and moves to Completed, while the Ready Queue organizes the next shortest job."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *`[ท่าทาง: คลิก Preset "SRTF · 8,4,9,5 (p.36)" แล้วกดปุ่มลูกศรขวาเพื่อ Step ไปที่ t = 1]`*  
+  > *`[ท่าทาง: คลิก Preset "SRTF · 8,4,9,5 (p.36)" — หน้าจอจะเริ่มจำลองที่ t = 0]`*  
   > *"ขอบคุณครับ ตอนนี้เรามาดูการทำงานจริงบนเว็บกันครับ!*  
-  > *เรากดโหลดชุดทดสอบ **SRTF** สังเกตที่เวลา $t = 1$ นะครับ:*  
-  > *เดิม P1 กำลังรันอยู่ แต่ P2 เพิ่งมาถึงด้วย burst 4 ซึ่งน้อยกว่าเวลาที่เหลือของ P1 (7 ms) ระบบจึงทำการ Preempt ดึง CPU ให้ P2 ทันที*  
-  > *ที่สำคัญ โปรแกรมของเรามี **กล่อง 💡 เหตุผลการจัดคิว (Decision Reason)** คอยอธิบายเบื้องหลังการตัดสินใจทุกจังหวะเวลาอย่างชัดเจน*  
-  > *โดยแถบ Pipeline จะแสดง Ready Queue ทางซ้าย, CPU ตรงกลาง, และงานที่จบแล้วทางขวาแบบสด ๆ ครับ"*
+  > *เรากดโหลดชุดทดสอบ **SRTF** สังเกตว่าที่เวลาเริ่มต้น $t = 0$ มีเพียง P1 มาถึงตัวแรก จึงได้ครอง CPU ไปก่อน*  
+  > *`[ท่าทาง: กดปุ่มลูกศรขวา (→) เพื่อก้าวไปที่ t = 1]`*  
+  > *คราวนี้ดูที่เวลา $t = 1$ นะครับ: P2 เพิ่งมาถึงด้วย burst 4 ซึ่งน้อยกว่าเวลาที่เหลือของ P1 (7 ms) ระบบจึงทำการ Preempt ดึง CPU ให้ P2 ทันที!*  
+  > *และสังเกตที่ **กล่อง 💡 เหตุผลการจัดคิว (Decision Reason)** นะครับ ระบบจะพิมพ์บอกเหตุผลการแย่ง CPU อย่างชัดเจนทันที*  
+  > *`[ท่าทาง: กดปุ่มก้าวหน้าต่อไปที่ t = 5]`*  
+  > *เมื่อถึงเวลา $t = 5$, P2 รันครบ 4 ms และย้ายไปช่อง Completed อย่างสมบูรณ์ครับ"*
 
 ---
 

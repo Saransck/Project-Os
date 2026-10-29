@@ -2342,7 +2342,7 @@
         function animTogglePlay() {
             if (animPlaying) { animStop(); return; }
             if (animCurrentTime >= animTimeline.length - 1) {   // at the end → replay from t = 1
-                animCurrentTime = Math.min(1, animTimeline.length - 1);
+                animCurrentTime = 0;
                 renderAnimFrame();
             }
             animPlaying = true;
@@ -2368,7 +2368,7 @@
 
         function animReset() {
             animStop();
-            animCurrentTime = Math.min(1, animTimeline.length - 1);
+            animCurrentTime = 0;
             renderAnimFrame();
         }
 
@@ -2542,7 +2542,7 @@
             $('sectionCompare').style.display = 'none';
 
             animTimeline = buildAnimTimeline(result, processes, algo);
-            animCurrentTime = Math.min(1, animTimeline.length - 1);   // start at t = 1
+            animCurrentTime = 0;   // start at t = 0
             ganttAnimateOnce = true;
             pipePrev = { ready: new Set(), running: null, completed: new Set() };
             refreshSingleView();
