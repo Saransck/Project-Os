@@ -101,19 +101,21 @@
 * **🗣️ English Script:**
   > *`[Action: Click preset "SRTF · 8,4,9,5 (p.36)" — the simulator starts at t = 0]`*  
   > *"Thank you. Let's see the simulator in action!*  
-  > *We loaded the benchmark for **SRTF**. Notice that at time $t = 0$, only P1 has arrived, so P1 occupies the CPU.*  
+  > *We loaded the benchmark for **SRTF**. At time $t = 0$, only P1 has arrived, so P1 starts running on the CPU.*  
   > *`[Action: Press Arrow Right (→) to step to t = 1]`*  
-  > *Now look at time $t = 1$: P2 arrives with a burst of 4. Because 4 is strictly less than P1's remaining 7, the scheduler preempts P1 and gives the CPU to P2!*  
-  > *Notice our real-time **Decision Reason Box**: it immediately explains *why* the preemption happened.*  
+  > *Now look at the screen at time $t = 1$: P2 arrives with a burst of 4, which is less than P1's remaining 7.*  
+  > *As you can see, **P2 is now in the Running CPU**, while **P1 has been preempted and moved into the Ready Queue**!*  
+  > *Notice our real-time **Decision Reason Box**: it immediately explains this preemption.*  
   > *`[Action: Step forward to t = 5]`*  
-  > *By time $t = 5$, P2 finishes and moves to Completed, while the Ready Queue organizes the next shortest job."*
+  > *By time $t = 5$, P2 finishes its 4 ms burst and moves to Completed, while the queue organizes the next shortest job."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
   > *`[ท่าทาง: คลิก Preset "SRTF · 8,4,9,5 (p.36)" — หน้าจอจะเริ่มจำลองที่ t = 0]`*  
   > *"ขอบคุณครับ ตอนนี้เรามาดูการทำงานจริงบนเว็บกันครับ!*  
-  > *เรากดโหลดชุดทดสอบ **SRTF** สังเกตว่าที่เวลาเริ่มต้น $t = 0$ มีเพียง P1 มาถึงตัวแรก จึงได้ครอง CPU ไปก่อน*  
+  > *เรากดโหลดชุดทดสอบ **SRTF** ที่เวลาเริ่มต้น $t = 0$ มีเพียง P1 มาถึงตัวแรก จึงได้ครอง CPU ไปก่อน*  
   > *`[ท่าทาง: กดปุ่มลูกศรขวา (→) เพื่อก้าวไปที่ t = 1]`*  
-  > *คราวนี้ดูที่เวลา $t = 1$ นะครับ: P2 เพิ่งมาถึงด้วย burst 4 ซึ่งน้อยกว่าเวลาที่เหลือของ P1 (7 ms) ระบบจึงทำการ Preempt ดึง CPU ให้ P2 ทันที!*  
+  > *คราวนี้ดูที่หน้าจอเวลา $t = 1$ นะครับ: P2 เพิ่งมาถึงด้วย burst 4 ซึ่งน้อยกว่าเวลาที่เหลือของ P1 (7 ms)*  
+  > *จะเห็นชัดเจนเลยครับว่า **P2 เข้าไปอยู่ในช่อง Running แทนทันที** ส่วน **P1 ถูกเตะกลับไปรออยู่ใน Ready Queue** ทางซ้ายมือ!*  
   > *และสังเกตที่ **กล่อง 💡 เหตุผลการจัดคิว (Decision Reason)** นะครับ ระบบจะพิมพ์บอกเหตุผลการแย่ง CPU อย่างชัดเจนทันที*  
   > *`[ท่าทาง: กดปุ่มก้าวหน้าต่อไปที่ t = 5]`*  
   > *เมื่อถึงเวลา $t = 5$, P2 รันครบ 4 ms และย้ายไปช่อง Completed อย่างสมบูรณ์ครับ"*
