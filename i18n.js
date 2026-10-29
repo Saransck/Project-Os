@@ -17,7 +17,7 @@
     const I18N = {
         en: {
             'sec.input': 'Process Setup',
-            'presets.label': 'Textbook examples & Test Presets',
+            'presets.label': 'Test Presets',
             'preset.priorityPre': 'Priority Preemptive · with arrivals',
             'preset.convoy': 'FCFS · Convoy Effect (3,3,24)',
             'preset.idle': 'FCFS · CPU Idle Gap',
@@ -184,7 +184,7 @@
 
         th: {
             'sec.input': 'ตั้งค่า Process',
-            'presets.label': 'ตัวอย่างจากหนังสือ & ชุดทดสอบ (Presets)',
+            'presets.label': 'ชุดทดสอบ (Test Presets)',
             'preset.priorityPre': 'Priority Preemptive · มาถึงไม่พร้อมกัน',
             'preset.convoy': 'FCFS · ปรากฏการณ์ Convoy (3,3,24)',
             'preset.idle': 'FCFS · มีช่วง CPU Idle',
