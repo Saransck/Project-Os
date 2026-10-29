@@ -28,7 +28,7 @@
             --border-glow: rgba(14, 165, 233, 0.45);
             --text-1: #e2f1fc;
             --text-2: #8da4c4;
-            --text-3: #536b8e;
+            --text-3: #94a3b8; /* Enhanced for WCAG AA contrast (>= 4.5:1) */
             --indigo: #0ea5e9;
             --violet: #38bdf8;
             --cyan: #06b6d4;
@@ -68,7 +68,7 @@
             --border-glow: rgba(14, 165, 233, 0.45);
             --text-1: #0f172a;
             --text-2: #334155;
-            --text-3: #64748b;
+            --text-3: #475569; /* Enhanced for WCAG AA contrast */
             --shadow-sm: 0 2px 8px rgba(14, 165, 233, 0.06);
             --shadow-md: 0 4px 20px rgba(14, 165, 233, 0.08);
             --shadow-lg: 0 8px 40px rgba(14, 165, 233, 0.12);
@@ -88,6 +88,22 @@
 
         html {
             scroll-behavior: smooth;
+        }
+
+        /* Accessibility Focus Ring (WCAG 2.4.7) */
+        :focus-visible {
+            outline: 2px solid var(--violet) !important;
+            outline-offset: 2px !important;
+        }
+
+        /* Reduced Motion Preference (WCAG 2.3.3) */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
         body {
@@ -1560,6 +1576,51 @@
                 justify-content: center;
             }
         }
+        /* ══════════════════════════════════════════════════════════════
+       26. SCHEDULING DECISION & ASSUMPTIONS BANNER (Phase 2)
+       ══════════════════════════════════════════════════════════════ */
+        .assumptions-banner {
+            padding: 14px 18px;
+            background: rgba(14, 165, 233, 0.07);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            margin-bottom: 22px;
+            font-size: 0.83rem;
+            color: var(--text-2);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            line-height: 1.55;
+        }
+        .assumptions-banner strong {
+            color: var(--violet);
+            font-size: 0.88rem;
+        }
+        .pipeline__decision {
+            margin-top: 14px;
+            padding: 12px 18px;
+            background: rgba(14, 165, 233, 0.08);
+            border: 1px solid var(--border-glow);
+            border-left: 4px solid var(--cyan);
+            border-radius: var(--r-md);
+            font-size: 0.88rem;
+            color: var(--text-1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        .pipeline__decision strong {
+            color: var(--cyan);
+            white-space: nowrap;
+        }
+        .star-best {
+            color: var(--emerald);
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
     </style>
 </head>
 
@@ -1583,6 +1644,12 @@
         <!-- ═══════════════════════════════════════════════════════════
          PROCESS INPUT
          ═══════════════════════════════════════════════════════════ -->
+        <!-- System Assumptions Banner -->
+        <div class="assumptions-banner" role="note" aria-label="Simulation Assumptions">
+            <div><strong data-i18n="assump.title"></strong> <span data-i18n="assump.text"></span></div>
+            <div style="opacity: 0.85; font-size: 0.78rem;" data-i18n="kbd.tip"></div>
+        </div>
+
         <section id="sectionInput">
             <div class="section-title">
                 <div class="section-title__icon">📝</div>
@@ -1593,19 +1660,17 @@
                 <!-- Presets from textbook -->
                 <label class="form-label" style="margin-bottom: 8px; display: block;" data-i18n="presets.label"></label>
                 <div class="preset-row">
-                    <button class="preset-chip" onclick="loadPreset('fcfs1')" id="preset-fcfs1">FCFS · 24,3,3
-                        (p.25)</button>
-                    <button class="preset-chip" onclick="loadPreset('sjf1')" id="preset-sjf1">SJF · 6,8,7,3
-                        (p.30)</button>
-                    <button class="preset-chip" onclick="loadPreset('sjf_preempt')" id="preset-sjf_preempt">SRTF ·
-                        8,4,9,5 (p.36)</button>
+                    <button class="preset-chip" onclick="loadPreset('fcfs1')" id="preset-fcfs1">FCFS · 24,3,3 (p.25)</button>
+                    <button class="preset-chip" onclick="loadPreset('convoy')" id="preset-convoy" data-i18n="preset.convoy">FCFS · Convoy (3,3,24)</button>
+                    <button class="preset-chip" onclick="loadPreset('idle')" id="preset-idle" data-i18n="preset.idle">FCFS · Idle Gap</button>
+                    <button class="preset-chip" onclick="loadPreset('sjf1')" id="preset-sjf1">SJF · 6,8,7,3 (p.30)</button>
+                    <button class="preset-chip" onclick="loadPreset('tie_sjf')" id="preset-tie_sjf" data-i18n="preset.tieSjf">SJF · Tie-break</button>
+                    <button class="preset-chip" onclick="loadPreset('sjf_preempt')" id="preset-sjf_preempt">SRTF · 8,4,9,5 (p.36)</button>
                     <button class="preset-chip" onclick="loadPreset('rr1')" id="preset-rr1">RR · q=4 (p.40)</button>
-                    <button class="preset-chip" onclick="loadPreset('priority1')" id="preset-priority1">Priority
-                        (p.48)</button>
-                    <button class="preset-chip" onclick="loadPreset('priority_pre')" id="preset-priority_pre"
-                        data-i18n="preset.priorityPre"></button>
-                    <button class="preset-chip" onclick="loadPreset('priority_rr')" id="preset-priority_rr">Priority +
-                        RR · q=2 (p.53)</button>
+                    <button class="preset-chip" onclick="loadPreset('rr_q1')" id="preset-rr_q1" data-i18n="preset.rrQ1">RR · q=1</button>
+                    <button class="preset-chip" onclick="loadPreset('priority1')" id="preset-priority1">Priority (p.48)</button>
+                    <button class="preset-chip" onclick="loadPreset('priority_pre')" id="preset-priority_pre" data-i18n="preset.priorityPre"></button>
+                    <button class="preset-chip" onclick="loadPreset('priority_rr')" id="preset-priority_rr">Priority + RR · q=2 (p.53)</button>
                 </div>
 
                 <!-- Algorithm + process input: one 4-column grid so every field lines up -->
@@ -1814,6 +1879,11 @@
                     </div>
                 </div>
 
+                <!-- Real-time Scheduling Decision Reason -->
+                <div class="pipeline__decision" id="pipeDecision" role="status" aria-live="polite">
+                    <strong data-i18n="pipe.reason.title"></strong> <span>...</span>
+                </div>
+
                 <!-- Gantt Chart -->
                 <h3 class="sub-heading" data-i18n="gantt.title"></h3>
                 <div class="gantt" id="ganttMain">
@@ -1890,337 +1960,57 @@
     </div><!-- /.app -->
 
     <!-- ═══ JAVASCRIPT ═══ -->
+    <script src="scheduler.js"></script>
+    <script src="i18n.js"></script>
     <script>
         'use strict';
         /* ════════════════════════════════════════════════════════════════
            I18N — English / Thai
            ════════════════════════════════════════════════════════════════ */
-        const I18N = {};
-        I18N.en = {
-            'sec.input': 'Process Setup',
-            'presets.label': 'Textbook examples (presets)',
-            'preset.priorityPre': 'Priority Preemptive · with arrivals',
-            'algo.label': 'Algorithm',
-            'opt.fcfs': 'First-Come, First-Served (FCFS)',
-            'opt.sjf': 'Shortest-Job-First (SJF) — Non-preemptive',
-            'opt.sjf_preemptive': 'Shortest-Job-First — Preemptive (SRTF)',
-            'opt.rr': 'Round Robin (RR)',
-            'opt.priority': 'Priority Scheduling — Non-preemptive',
-            'opt.priority_preemptive': 'Priority Scheduling — Preemptive',
-            'opt.priority_rr': 'Priority + Round Robin',
-            'quantum.label': 'Time Quantum',
-            'arrival.label': 'Arrival Time',
-            'burst.label': 'Burst Time',
-            'burst.ph': 'e.g. 10',
-            'priority.label': 'Priority',
-            'hint.algo': 'Pick an algorithm, or load a textbook preset above',
-            'hint.quantum': 'q = 1 – 50 · used by RR, Priority + RR',
-            'hint.arrival': '0 – 100',
-            'hint.burst': '1 – 50',
-            'hint.priority': '0 – 99 · lower number = higher priority',
-            'hint.enter': 'or press Enter in any field',
-            'hint.dist': 'Exponential = many short bursts (p.5)',
-            'btn.add': '➕ Add Process',
-            'btn.random': '🎲 Random Processes',
-            'btn.clear': '🗑️ Clear All',
-            'rand.title': '🎲 Random Process Generator',
-            'rand.dist': 'Distribution',
-            'rand.uniform': 'Uniform',
-            'rand.exponential': 'Exponential (many short bursts)',
-            'rand.go': '⚡ Generate',
-            'rand.close': '✕ Close',
-            'th.process': 'Process', 'th.arrival': 'Arrival', 'th.burst': 'Burst', 'th.priority': 'Priority',
-            'th.start': 'First Run', 'th.finish': 'Finish', 'th.waiting': 'Waiting',
-            'th.turnaround': 'Turnaround', 'th.response': 'Response',
-            'th.algorithm': 'Algorithm', 'th.avgW': 'Avg Waiting', 'th.avgT': 'Avg Turnaround',
-            'th.avgR': 'Avg Response', 'th.cs': 'Context Switches',
-            'tbl.empty': 'No processes yet — add a process or pick a preset above.',
-            'btn.remove': 'Remove',
-            'btn.run': '🚀 Run Simulation',
-            'btn.compare': '📊 Compare All Algorithms',
-
-            'f.arrival': 'Arrival Time', 'f.burst': 'Burst Time', 'f.priority': 'Priority',
-            'f.quantum': 'Time Quantum', 'f.count': 'Number of processes', 'f.maxArr': 'Max Arrival',
-            'f.minBurst': 'Min Burst', 'f.maxBurst': 'Max Burst', 'f.maxPri': 'Max Priority',
-            'err.range': '{field} must be a whole number from {min} to {max}.',
-            'err.noProc': 'Please add at least one process first.',
-            'err.maxProcs': 'At most {n} processes are allowed.',
-            'err.minMax': 'Min Burst must not be greater than Max Burst.',
-
-            'result.title': 'Result — {algo}',
-            'anim.back': '⏮ Back', 'anim.play': '▶ Play', 'anim.pause': '⏸ Pause',
-            'anim.fwd': '⏭ Next', 'anim.reset': '↺ Reset', 'anim.speed': '⚡ Speed:',
-            'pipe.title': '🔄 CPU Pipeline (at current time t)',
-            'pipe.ready': 'Ready Queue', 'pipe.running': 'Running', 'pipe.completed': 'Completed',
-            'pipe.empty': 'empty', 'pipe.idle': 'Idle (CPU free)',
-            'pipe.arrival': 'Arrival', 'pipe.burst': 'Burst', 'pipe.priority': 'Priority',
-            'pipe.rem': 'Remaining', 'pipe.finish': 'Finished at',
-            'qorder.fifo': 'FIFO order (head first)',
-            'qorder.burst': 'Ordered by burst time (shortest first)',
-            'qorder.rem': 'Ordered by remaining time (shortest first)',
-            'qorder.pri': 'Ordered by priority (lowest number first)',
-            'qorder.prirr': 'By priority, then RR (FIFO) order within a level',
-            'gantt.title': '📊 Gantt Chart',
-            'gantt.empty': 'Nothing has run yet at t = 0 — press Next or Play.',
-            'gantt.none': 'No data',
-            'gantt.idle': 'idle',
-            'ptl.title': '📐 Per-Process Timeline',
-            'ptl.label': 'Process-level view (state of each process in each time unit)',
-            'ptl.running': 'Running', 'ptl.waiting': 'Waiting (ready queue)', 'ptl.idle': 'Not arrived / Completed',
-            'ptl.state.running': 'running', 'ptl.state.waiting': 'waiting', 'ptl.state.idle': 'completed', 'ptl.state.notarrived': 'not arrived',
-            'res.title': '📋 Results Table',
-            'res.avg': 'Average',
-            'res.formula': 'Turnaround = Finish − Arrival · Waiting = Turnaround − Burst · Response = First Run − Arrival (Ch.4 p.19–20). Context switch = the CPU switches directly from one process to a different process; a process that keeps the CPU because it is the only runnable one (p.41), or a dispatch onto an idle CPU, is not counted.',
-
-            'st.makespan': 'Total Time (makespan)',
-            'st.util': 'CPU Utilization',
-            'st.throughput': 'Throughput',
-            'st.throughputSub': '{n} processes / {t} ms',
-            'st.cs': 'Context Switches',
-            'st.csSub': '{v} on completion (voluntary) · {nv} by preemption (nonvoluntary)',
-            'st.idle': 'Idle Time',
-
-            'sec.compare': 'Compare All Algorithms',
-            'cmp.tableTitle': '📋 Detailed Comparison',
-            'cmp.note': 'Green = best value in each column (lower is better). All times in ms.',
-            'cmp.ganttTitle': '📈 Gantt Charts — All Algorithms',
-        };
-        Object.assign(I18N.en, {
-            'info.fcfs': `<h3>📌 First-Come, First-Served (FCFS)</h3>
-        <span class="tag tag--nonpreemptive">Non-preemptive</span>
-        <p style="margin-top:10px;">The process that requests the CPU first is allocated the CPU first — managed with a FIFO ready queue (p.23).</p>
-        <ul>
-            <li><strong>Pros:</strong> simple to write and understand.</li>
-            <li><strong>Cons:</strong> average waiting time is often long; <strong>convoy effect</strong> — short processes wait behind one long process (p.27).</li>
-            <li><strong>Not suited to:</strong> interactive systems — one process can keep the CPU for a long time (p.28).</li>
-        </ul>`,
-            'info.sjf': `<h3>📌 Shortest-Job-First (SJF) — Non-preemptive</h3>
-        <span class="tag tag--nonpreemptive">Non-preemptive</span>
-        <p style="margin-top:10px;">The CPU goes to the process with the <strong>smallest next CPU burst</strong>; ties are broken by FCFS (p.29).</p>
-        <ul>
-            <li><strong>Pros:</strong> provably optimal — minimum average waiting time for a given set of processes (p.31).</li>
-            <li><strong>Cons:</strong> the length of the next CPU burst is not known, so it must be predicted (p.32).</li>
-            <li><strong>Prediction:</strong> τ<sub>n+1</sub> = α·t<sub>n</sub> + (1−α)·τ<sub>n</sub> (exponential average, p.33).</li>
-        </ul>`,
-            'info.sjf_preemptive': `<h3>📌 Shortest-Job-First — Preemptive (SRTF)</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">If a newly arrived process needs less time than what is <strong>left</strong> of the running process, the running process is <strong>preempted</strong> (p.35).</p>
-        <ul>
-            <li><strong>Also called:</strong> Shortest-Remaining-Time-First (SRTF).</li>
-            <li><strong>Tie rule:</strong> on equal remaining time the running process keeps the CPU (no extra context switch).</li>
-            <li><strong>Pros:</strong> lower average waiting time than non-preemptive SJF (p.37: 6.5 vs 7.75 ms).</li>
-            <li><strong>Cons:</strong> more context switches; long processes may wait a long time (SJF is a special case of priority scheduling, p.47).</li>
-        </ul>`,
-            'info.rr': `<h3>📌 Round Robin (RR)</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">Like FCFS, but each process runs for at most one <strong>time quantum q</strong>, then goes to the <strong>tail</strong> of the ready queue (p.38–39).</p>
-        <ul>
-            <li><strong>Each process gets:</strong> 1/n of the CPU time; it waits no longer than (n−1) × q (p.42).</li>
-            <li><strong>Quantum size:</strong> too large → behaves like FCFS; too small → many context switches (p.43).</li>
-            <li><strong>Rule of thumb:</strong> 80% of CPU bursts should be shorter than q (p.46).</li>
-            <li><strong>Convention used here:</strong> a process arriving at the instant a quantum expires joins the queue before the preempted process.</li>
-        </ul>`,
-            'info.priority': `<h3>📌 Priority Scheduling — Non-preemptive</h3>
-        <span class="tag tag--nonpreemptive">Non-preemptive</span>
-        <p style="margin-top:10px;">The CPU goes to the highest-priority process — <strong>lower number = higher priority</strong>; equal priorities are served FCFS (p.47).</p>
-        <ul>
-            <li><strong>SJF is a special case:</strong> priority = inverse of the (predicted) next CPU burst (p.47).</li>
-            <li><strong>Problem:</strong> <strong>starvation</strong> (indefinite blocking) of low-priority processes (p.51).</li>
-            <li><strong>Solution:</strong> <strong>aging</strong> — gradually raise the priority of processes that wait a long time (p.52).</li>
-        </ul>`,
-            'info.priority_preemptive': `<h3>📌 Priority Scheduling — Preemptive</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">If a newly arrived process has a higher priority than the running process, the running process is <strong>preempted</strong> (p.50).</p>
-        <ul>
-            <li><strong>Pros:</strong> an important process gets the CPU immediately.</li>
-            <li><strong>Cons:</strong> more context switches; low-priority processes can still starve (p.51) — solved by aging (p.52).</li>
-            <li><strong>Try:</strong> preset “Priority Preemptive · with arrivals” and compare with the non-preemptive version.</li>
-        </ul>`,
-            'info.priority_rr': `<h3>📌 Priority + Round Robin</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">Run the highest-priority process; processes with the <strong>same priority</strong> share the CPU with <strong>round robin</strong> (quantum q) (p.53–54).</p>
-        <ul>
-            <li>A process that is alone at its priority level keeps running after its quantum (p.54: P3 runs 16–20).</li>
-            <li>A newly arrived higher-priority process preempts the running one; the preempted process goes to the tail of its level.</li>
-            <li><strong>Try:</strong> preset “Priority + RR · q=2 (p.53)” — it reproduces the textbook Gantt chart.</li>
-        </ul>`,
-        });
-        I18N.th = {
-            'sec.input': 'ตั้งค่า Process',
-            'presets.label': 'ตัวอย่างจากหนังสือ (Presets)',
-            'preset.priorityPre': 'Priority Preemptive · มาถึงไม่พร้อมกัน',
-            'algo.label': 'อัลกอริทึม',
-            'opt.fcfs': 'First-Come, First-Served (FCFS)',
-            'opt.sjf': 'Shortest-Job-First (SJF) — Non-preemptive',
-            'opt.sjf_preemptive': 'Shortest-Job-First — Preemptive (SRTF)',
-            'opt.rr': 'Round Robin (RR)',
-            'opt.priority': 'Priority Scheduling — Non-preemptive',
-            'opt.priority_preemptive': 'Priority Scheduling — Preemptive',
-            'opt.priority_rr': 'Priority + Round Robin',
-            'quantum.label': 'Time Quantum',
-            'arrival.label': 'Arrival Time (เวลามาถึง)',
-            'burst.label': 'Burst Time (เวลาใช้ CPU)',
-            'burst.ph': 'เช่น 10',
-            'priority.label': 'Priority',
-            'hint.algo': 'เลือกอัลกอริทึม หรือกด preset จากหนังสือด้านบน',
-            'hint.quantum': 'q = 1 – 50 · ใช้กับ RR, Priority + RR',
-            'hint.arrival': '0 – 100',
-            'hint.burst': '1 – 50',
-            'hint.priority': '0 – 99 · เลขน้อย = สำคัญมาก',
-            'hint.enter': 'หรือกด Enter ในช่องใดก็ได้',
-            'hint.dist': 'Exponential = burst สั้นเยอะ (หน้า 5)',
-            'btn.add': '➕ เพิ่ม Process',
-            'btn.random': '🎲 สุ่ม Process',
-            'btn.clear': '🗑️ ล้างทั้งหมด',
-            'rand.title': '🎲 สุ่มสร้าง Process',
-            'rand.dist': 'การกระจาย',
-            'rand.uniform': 'Uniform (สม่ำเสมอ)',
-            'rand.exponential': 'Exponential (burst สั้นเยอะ)',
-            'rand.go': '⚡ สร้างเลย',
-            'rand.close': '✕ ปิด',
-            'th.process': 'Process', 'th.arrival': 'Arrival', 'th.burst': 'Burst', 'th.priority': 'Priority',
-            'th.start': 'เริ่มรันครั้งแรก', 'th.finish': 'เสร็จ', 'th.waiting': 'Waiting',
-            'th.turnaround': 'Turnaround', 'th.response': 'Response',
-            'th.algorithm': 'อัลกอริทึม', 'th.avgW': 'Avg Waiting', 'th.avgT': 'Avg Turnaround',
-            'th.avgR': 'Avg Response', 'th.cs': 'Context Switches',
-            'tbl.empty': 'ยังไม่มี process — เพิ่ม process หรือเลือก Preset ด้านบน',
-            'btn.remove': 'ลบ',
-            'btn.run': '🚀 จำลองการทำงาน',
-            'btn.compare': '📊 เปรียบเทียบทุกอัลกอริทึม',
-
-            'f.arrival': 'Arrival Time', 'f.burst': 'Burst Time', 'f.priority': 'Priority',
-            'f.quantum': 'Time Quantum', 'f.count': 'จำนวน Process', 'f.maxArr': 'Arrival สูงสุด',
-            'f.minBurst': 'Burst ต่ำสุด', 'f.maxBurst': 'Burst สูงสุด', 'f.maxPri': 'Priority สูงสุด',
-            'err.range': '{field} ต้องเป็นจำนวนเต็มตั้งแต่ {min} ถึง {max}',
-            'err.noProc': 'กรุณาเพิ่ม process อย่างน้อย 1 ตัวก่อน',
-            'err.maxProcs': 'เพิ่มได้สูงสุด {n} process',
-            'err.minMax': 'Burst ต่ำสุดต้องไม่มากกว่า Burst สูงสุด',
-
-            'result.title': 'ผลลัพธ์ — {algo}',
-            'anim.back': '⏮ ย้อน', 'anim.play': '▶ เล่น', 'anim.pause': '⏸ หยุด',
-            'anim.fwd': '⏭ ถัดไป', 'anim.reset': '↺ รีเซ็ต', 'anim.speed': '⚡ ความเร็ว:',
-            'pipe.title': '🔄 CPU Pipeline (ณ เวลา t ปัจจุบัน)',
-            'pipe.ready': 'Ready Queue', 'pipe.running': 'Running', 'pipe.completed': 'Completed',
-            'pipe.empty': 'ว่าง', 'pipe.idle': 'Idle (CPU ว่าง)',
-            'pipe.arrival': 'Arrival', 'pipe.burst': 'Burst', 'pipe.priority': 'Priority',
-            'pipe.rem': 'เหลือ', 'pipe.finish': 'เสร็จที่',
-            'qorder.fifo': 'เรียงแบบ FIFO (หัวคิวอยู่บน)',
-            'qorder.burst': 'เรียงตาม burst time (สั้นสุดอยู่บน)',
-            'qorder.rem': 'เรียงตามเวลาที่เหลือ (น้อยสุดอยู่บน)',
-            'qorder.pri': 'เรียงตาม priority (เลขน้อยอยู่บน)',
-            'qorder.prirr': 'เรียงตาม priority แล้วตามลำดับ RR (FIFO) ในระดับเดียวกัน',
-            'gantt.title': '📊 Gantt Chart',
-            'gantt.empty': 'ที่ t = 0 ยังไม่มีอะไรรัน — กด ถัดไป หรือ เล่น',
-            'gantt.none': 'ไม่มีข้อมูล',
-            'gantt.idle': 'idle',
-            'ptl.title': '📐 Timeline ราย Process',
-            'ptl.label': 'มุมมองราย process (สถานะของแต่ละ process ในแต่ละหน่วยเวลา)',
-            'ptl.running': 'Running', 'ptl.waiting': 'Waiting (อยู่ใน ready queue)', 'ptl.idle': 'ยังไม่มา / เสร็จแล้ว',
-            'ptl.state.running': 'กำลังรัน', 'ptl.state.waiting': 'รอ', 'ptl.state.idle': 'เสร็จแล้ว', 'ptl.state.notarrived': 'ยังไม่มา',
-            'res.title': '📋 ตารางผลลัพธ์',
-            'res.avg': 'ค่าเฉลี่ย',
-            'res.formula': 'Turnaround = Finish − Arrival · Waiting = Turnaround − Burst · Response = เริ่มรันครั้งแรก − Arrival (บทที่ 4 หน้า 19–20) · Context switch = CPU สลับจาก process หนึ่งไปอีก process หนึ่งโดยตรง; ถ้า process ได้รันต่อเพราะเป็นตัวเดียวที่พร้อม (หน้า 41) หรือ CPU ว่างแล้วจึงรับ process ใหม่ จะไม่นับ',
-
-            'st.makespan': 'เวลารวม (makespan)',
-            'st.util': 'CPU Utilization',
-            'st.throughput': 'Throughput',
-            'st.throughputSub': '{n} process / {t} ms',
-            'st.cs': 'Context Switches',
-            'st.csSub': 'เพราะจบงาน (voluntary) {v} · ถูก preempt (nonvoluntary) {nv}',
-            'st.idle': 'เวลา CPU ว่าง',
-
-            'sec.compare': 'เปรียบเทียบทุกอัลกอริทึม',
-            'cmp.tableTitle': '📋 ตารางเปรียบเทียบละเอียด',
-            'cmp.note': 'สีเขียว = ค่าที่ดีที่สุดในแต่ละคอลัมน์ (ยิ่งน้อยยิ่งดี) · หน่วยเวลาเป็น ms',
-            'cmp.ganttTitle': '📈 Gantt Chart ทุกอัลกอริทึม',
-        };
-        Object.assign(I18N.th, {
-            'info.fcfs': `<h3>📌 First-Come, First-Served (FCFS)</h3>
-        <span class="tag tag--nonpreemptive">Non-preemptive</span>
-        <p style="margin-top:10px;">Process ที่ขอ CPU ก่อนได้ CPU ก่อน — ใช้ ready queue แบบ FIFO (หน้า 23)</p>
-        <ul>
-            <li><strong>ข้อดี:</strong> เขียนง่าย เข้าใจง่าย</li>
-            <li><strong>ข้อเสีย:</strong> avg waiting time มักสูง; เกิด <strong>convoy effect</strong> — process สั้นต้องรอ process ยาวตัวเดียว (หน้า 27)</li>
-            <li><strong>ไม่เหมาะกับ:</strong> ระบบ interactive เพราะ process เดียวอาจครอง CPU นาน (หน้า 28)</li>
-        </ul>`,
-            'info.sjf': `<h3>📌 Shortest-Job-First (SJF) — Non-preemptive</h3>
-        <span class="tag tag--nonpreemptive">Non-preemptive</span>
-        <p style="margin-top:10px;">ให้ CPU กับ process ที่มี <strong>CPU burst ถัดไปสั้นที่สุด</strong>; ถ้าเท่ากันใช้ FCFS (หน้า 29)</p>
-        <ul>
-            <li><strong>ข้อดี:</strong> optimal — ได้ avg waiting time ต่ำที่สุดสำหรับชุด process ที่กำหนด (หน้า 31)</li>
-            <li><strong>ข้อเสีย:</strong> ไม่รู้ความยาว CPU burst ถัดไปจริง ต้องประมาณ (หน้า 32)</li>
-            <li><strong>การประมาณ:</strong> τ<sub>n+1</sub> = α·t<sub>n</sub> + (1−α)·τ<sub>n</sub> (exponential average หน้า 33)</li>
-        </ul>`,
-            'info.sjf_preemptive': `<h3>📌 Shortest-Job-First — Preemptive (SRTF)</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">ถ้า process ที่เพิ่งมาต้องใช้เวลาน้อยกว่า<strong>เวลาที่เหลือ</strong>ของ process ที่กำลังรัน จะ <strong>preempt</strong> ทันที (หน้า 35)</p>
-        <ul>
-            <li><strong>ชื่อเต็ม:</strong> Shortest-Remaining-Time-First (SRTF)</li>
-            <li><strong>กรณีเท่ากัน:</strong> process ที่กำลังรันได้รันต่อ (ไม่เกิด context switch เพิ่ม)</li>
-            <li><strong>ข้อดี:</strong> avg waiting time ต่ำกว่า SJF แบบ non-preemptive (หน้า 37: 6.5 เทียบ 7.75 ms)</li>
-            <li><strong>ข้อเสีย:</strong> context switch บ่อยขึ้น; process ยาวอาจรอนาน (SJF เป็นกรณีพิเศษของ priority scheduling หน้า 47)</li>
-        </ul>`,
-            'info.rr': `<h3>📌 Round Robin (RR)</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">เหมือน FCFS แต่แต่ละ process รันได้ไม่เกิน 1 <strong>time quantum (q)</strong> ถ้ายังไม่เสร็จจะไป<strong>ท้ายคิว</strong> (หน้า 38–39)</p>
-        <ul>
-            <li><strong>แต่ละ process ได้:</strong> 1/n ของเวลา CPU และรอไม่เกิน (n−1) × q (หน้า 42)</li>
-            <li><strong>ขนาด quantum:</strong> ใหญ่เกิน → เหมือน FCFS; เล็กเกิน → context switch เยอะ (หน้า 43)</li>
-            <li><strong>กฎ:</strong> 80% ของ CPU burst ควรสั้นกว่า q (หน้า 46)</li>
-            <li><strong>ข้อตกลงในโปรแกรมนี้:</strong> process ที่มาถึงพอดีตอน quantum หมด จะเข้าคิวก่อน process ที่ถูก preempt</li>
-        </ul>`,
-            'info.priority': `<h3>📌 Priority Scheduling — Non-preemptive</h3>
-        <span class="tag tag--nonpreemptive">Non-preemptive</span>
-        <p style="margin-top:10px;">ให้ CPU กับ process ที่ priority สูงสุด — <strong>เลขน้อย = สำคัญมาก</strong>; priority เท่ากันใช้ FCFS (หน้า 47)</p>
-        <ul>
-            <li><strong>SJF เป็นกรณีพิเศษ:</strong> priority = ส่วนกลับของ CPU burst ถัดไป (หน้า 47)</li>
-            <li><strong>ปัญหา:</strong> <strong>starvation</strong> (indefinite blocking) ของ process priority ต่ำ (หน้า 51)</li>
-            <li><strong>ทางแก้:</strong> <strong>aging</strong> — ค่อย ๆ เพิ่ม priority ให้ process ที่รอนาน (หน้า 52)</li>
-        </ul>`,
-            'info.priority_preemptive': `<h3>📌 Priority Scheduling — Preemptive</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">ถ้า process ที่เพิ่งมามี priority สูงกว่า process ที่กำลังรัน จะ <strong>preempt</strong> (หน้า 50)</p>
-        <ul>
-            <li><strong>ข้อดี:</strong> process สำคัญได้ CPU ทันที</li>
-            <li><strong>ข้อเสีย:</strong> context switch บ่อยขึ้น; process priority ต่ำยังเกิด starvation ได้ (หน้า 51) — แก้ด้วย aging (หน้า 52)</li>
-            <li><strong>ลองดู:</strong> preset “Priority Preemptive · มาถึงไม่พร้อมกัน” แล้วเทียบกับแบบ non-preemptive</li>
-        </ul>`,
-            'info.priority_rr': `<h3>📌 Priority + Round Robin</h3>
-        <span class="tag tag--preemptive">Preemptive</span>
-        <p style="margin-top:10px;">รัน process ที่ priority สูงสุด; process ที่ <strong>priority เท่ากัน</strong> ผลัดกันใช้ CPU แบบ <strong>round robin</strong> (quantum q) (หน้า 53–54)</p>
-        <ul>
-            <li>ถ้าเหลือ process เดียวใน priority นั้น จะรันต่อได้เลยแม้ quantum หมด (หน้า 54: P3 รัน 16–20)</li>
-            <li>ถ้ามี process priority สูงกว่ามาถึง จะ preempt; ตัวที่ถูก preempt ไปต่อท้ายคิวของระดับตัวเอง</li>
-            <li><strong>ลองดู:</strong> preset “Priority + RR · q=2 (p.53)” — ได้ Gantt chart ตรงกับหนังสือ</li>
-        </ul>`,
-        });
-
+        // I18N dictionary is loaded externally from i18n.js
+        // Preserves clean modular separation and dual-language synchronization
         /* ════════════════════════════════════════════════════════════════
            CONSTANTS
            ════════════════════════════════════════════════════════════════ */
-        const ALGO_LABELS = {
-            fcfs: 'FCFS',
-            sjf: 'SJF',
-            sjf_preemptive: 'SRTF',
-            rr: 'Round Robin',
-            priority: 'Priority',
-            priority_preemptive: 'Priority (Pre)',
-            priority_rr: 'Priority + RR',
-        };
-
-        const ALL_ALGO_KEYS = Object.keys(ALGO_LABELS);
-        const QUANTUM_ALGOS = ['rr', 'priority_rr'];
-        const PRIORITY_ALGOS = ['priority', 'priority_preemptive', 'priority_rr'];
+        const {
+            ALGO_LABELS,
+            ALL_ALGO_KEYS,
+            QUANTUM_ALGOS,
+            PRIORITY_ALGOS,
+            buildResult,
+            emitIdle,
+            scheduleFCFS,
+            scheduleSJF,
+            schedulePreemptiveByKey,
+            scheduleSRTF,
+            scheduleRR,
+            schedulePriority,
+            schedulePriorityPre,
+            schedulePriorityRR,
+            computeStats,
+            averages,
+            readyComparator,
+            buildAnimTimeline,
+            dispatch,
+        } = CPUScheduler;
 
         const PALETTE = [
-            '#60A5FA', // P1 ฟ้า
-            '#F59E0B', // P2 เหลืองอำพัน
-            '#34D399', // P3 เขียวมิ้นต์
-            '#F472B6', // P4 ชมพู
-            '#A3E635', // P5 เขียวมะนาว (แทนม่วง)
-            '#FB923C', // P6 ส้ม
-            '#2DD4BF', // P7 เขียวน้ำทะเล
-            '#FACC15', // P8 เหลือง
+            '#60A5FA', // P1 Blue
+            '#F59E0B', // P2 Amber
+            '#34D399', // P3 Mint green
+            '#F472B6', // P4 Pink
+            '#A3E635', // P5 Lime
+            '#FB923C', // P6 Orange
+            '#2DD4BF', // P7 Teal
+            '#FACC15', // P8 Yellow
+            '#C084FC', // P9 Purple
+            '#38BDF8', // P10 Sky
+            '#4ADE80', // P11 Green
+            '#E879F9', // P12 Fuchsia
+            '#818CF8', // P13 Indigo
+            '#F87171', // P14 Red-Orange
+            '#2DD4BF', // P15 Cyan
+            '#FBBF24', // P16 Warm Yellow
         ];
 
         const BAR_COLORS = ['#60A5FA', '#F59E0B', '#34D399', '#F472B6', '#A3E635', '#FB923C', '#2DD4BF', '#FACC15'];
@@ -2377,9 +2167,13 @@
            ════════════════════════════════════════════════════════════════ */
         const PRESETS = {
             fcfs1: { algo: 'fcfs', quantum: 4, procs: [[0, 24, 0], [0, 3, 0], [0, 3, 0]] },                      // p.24–25
+            convoy: { algo: 'fcfs', quantum: 4, procs: [[0, 3, 0], [0, 3, 0], [0, 24, 0]] },                     // Convoy Effect
+            idle: { algo: 'fcfs', quantum: 4, procs: [[2, 3, 0], [7, 2, 0]] },                                     // CPU Idle Gap
             sjf1: { algo: 'sjf', quantum: 4, procs: [[0, 6, 0], [0, 8, 0], [0, 7, 0], [0, 3, 0]] },              // p.30
+            tie_sjf: { algo: 'sjf', quantum: 4, procs: [[0, 5, 0], [1, 3, 0], [1, 3, 0], [2, 3, 0]] },           // Tie-breaking
             sjf_preempt: { algo: 'sjf_preemptive', quantum: 4, procs: [[0, 8, 0], [1, 4, 0], [2, 9, 0], [3, 5, 0]] },              // p.36
             rr1: { algo: 'rr', quantum: 4, procs: [[0, 24, 0], [0, 3, 0], [0, 3, 0]] },                      // p.40
+            rr_q1: { algo: 'rr', quantum: 1, procs: [[0, 4, 0], [0, 3, 0], [0, 1, 0]] },                         // Small quantum
             priority1: { algo: 'priority', quantum: 4, procs: [[0, 10, 3], [0, 1, 1], [0, 2, 4], [0, 1, 5], [0, 5, 2]] },    // p.48
             // p.48 data with staggered arrivals, so preemptive and non-preemptive priority give different schedules
             priority_pre: { algo: 'priority_preemptive', quantum: 4, procs: [[0, 10, 3], [1, 1, 1], [2, 2, 4], [3, 1, 5], [4, 5, 2]] },
@@ -2519,334 +2313,11 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
-           SCHEDULING ALGORITHMS
-           Each returns { gantt, results } (+ queueTrace for RR-based ones:
-           queueTrace[t] = ready-queue PIDs in real FIFO order at time t)
+           SCHEDULING ALGORITHMS & PURE ENGINE
+           Imported cleanly from scheduler.js (CPUScheduler)
            ════════════════════════════════════════════════════════════════ */
-
-        function buildResult(p, start, finish) {
-            return {
-                name: p.name, arrival: p.arrival, burst: p.burst, priority: p.priority,
-                start, finish,
-                waiting: finish - p.arrival - p.burst,   // = turnaround − burst
-                turnaround: finish - p.arrival,
-                response: start - p.arrival,             // first run − arrival
-                color: p.color,
-            };
-        }
-
-        function emitIdle(gantt, time, target) {
-            if (time < target) {
-                gantt.push({ pid: null, start: time, end: target });
-                return target;
-            }
-            return time;
-        }
-
-        // ── FCFS ────────────────────────────────────────────────────────
-        function scheduleFCFS(procs) {
-            const sorted = [...procs].sort((a, b) => a.arrival - b.arrival || a.id - b.id);
-            const gantt = [], results = {};
-            let time = 0;
-            for (const p of sorted) {
-                time = emitIdle(gantt, time, p.arrival);
-                const start = time, end = start + p.burst;
-                gantt.push({ pid: p.id, name: p.name, start, end, color: p.color });
-                results[p.id] = buildResult(p, start, end);
-                time = end;
-            }
-            return { gantt, results };
-        }
-
-        // ── SJF (Non-preemptive) ────────────────────────────────────────
-        function scheduleSJF(procs) {
-            const pool = procs.map(p => ({ ...p, done: false }));
-            const gantt = [], results = {};
-            let time = 0, completed = 0;
-            while (completed < pool.length) {
-                const avail = pool.filter(p => !p.done && p.arrival <= time);
-                if (!avail.length) {
-                    const next = pool.filter(p => !p.done).sort((a, b) => a.arrival - b.arrival)[0];
-                    time = emitIdle(gantt, time, next.arrival);
-                    continue;
-                }
-                // shortest burst; ties → FCFS (p.29)
-                avail.sort((a, b) => a.burst - b.burst || a.arrival - b.arrival || a.id - b.id);
-                const p = avail[0];
-                const start = time, end = start + p.burst;
-                gantt.push({ pid: p.id, name: p.name, start, end, color: p.color });
-                results[p.id] = buildResult(p, start, end);
-                p.done = true;
-                time = end;
-                completed++;
-            }
-            return { gantt, results };
-        }
-
-        // ── Generic unit-time preemptive scheduler (SRTF, Priority-Pre) ─
-        // `key(p)` = selection key, smaller wins; ties → earlier arrival, then lower PID.
-        // The running process keeps the CPU on a tie (it arrived earlier), so no extra switch.
-        function schedulePreemptiveByKey(procs, key) {
-            const pool = procs.map(p => ({ ...p, rem: p.burst, firstStart: -1 }));
-            const gantt = [], results = {};
-            let time = 0, completed = 0;
-            const maxT = procs.reduce((s, p) => s + p.burst, 0) + Math.max(...procs.map(p => p.arrival)) + 1;
-            let prevPid = null, blockStart = 0;
-            while (completed < pool.length && time <= maxT) {
-                const avail = pool.filter(p => p.arrival <= time && p.rem > 0);
-                if (!avail.length) {
-                    const next = pool.filter(p => p.rem > 0).sort((a, b) => a.arrival - b.arrival)[0];
-                    if (!next) break;
-                    time = emitIdle(gantt, time, next.arrival);
-                    blockStart = time;
-                    continue;
-                }
-                avail.sort((a, b) => key(a) - key(b) || a.arrival - b.arrival || a.id - b.id);
-                const p = avail[0];
-                if (p.id !== prevPid) {
-                    if (prevPid !== null) flushBlock(gantt, pool, prevPid, blockStart, time);
-                    blockStart = time;
-                    prevPid = p.id;
-                }
-                if (p.firstStart < 0) p.firstStart = time;
-                p.rem--;
-                time++;
-                if (p.rem === 0) {
-                    gantt.push({ pid: p.id, name: p.name, start: blockStart, end: time, color: p.color });
-                    results[p.id] = buildResult(p, p.firstStart, time);
-                    completed++;
-                    prevPid = null;
-                    blockStart = time;
-                }
-            }
-            return { gantt, results };
-        }
-
-        // ── SJF Preemptive / SRTF (p.35–37) ─────────────────────────────
-        function scheduleSRTF(procs) {
-            return schedulePreemptiveByKey(procs, p => p.rem);
-        }
-
-        // ── Round Robin (p.38–41) ───────────────────────────────────────
-        function scheduleRR(procs, quantum) {
-            const q = quantum;
-            const pool = procs.map(p => ({ ...p, rem: p.burst, firstStart: -1 }));
-            const sorted = [...pool].sort((a, b) => a.arrival - b.arrival || a.id - b.id);
-            const queue = [], gantt = [], results = {}, queueTrace = [];
-            let time = 0, completed = 0, nextIdx = 0, iter = 0;
-            const admit = () => { while (nextIdx < sorted.length && sorted[nextIdx].arrival <= time) queue.push(sorted[nextIdx++]); };
-            admit();
-            while (completed < pool.length && iter < MAX_ITER) {
-                iter++;
-                if (!queue.length) {
-                    if (nextIdx >= sorted.length) break;
-                    time = emitIdle(gantt, time, sorted[nextIdx].arrival);
-                    admit();
-                }
-                const p = queue.shift();
-                if (p.firstStart < 0) p.firstStart = time;
-                const exec = Math.min(q, p.rem);
-                // record the real ready-queue order for every time unit of this slice
-                for (let tt = time; tt < time + exec; tt++) {
-                    const order = queue.map(x => x.id);
-                    for (let k = nextIdx; k < sorted.length && sorted[k].arrival <= tt; k++) order.push(sorted[k].id);
-                    queueTrace[tt] = order;
-                }
-                gantt.push({ pid: p.id, name: p.name, start: time, end: time + exec, color: p.color });
-                time += exec;
-                p.rem -= exec;
-                admit();                       // arrivals at `time` join before the preempted process
-                if (p.rem > 0) {
-                    queue.push(p);             // back to the tail (p.39)
-                } else {
-                    results[p.id] = buildResult(p, p.firstStart, time);
-                    completed++;
-                }
-            }
-            return { gantt, results, queueTrace };
-        }
-
-        // ── Priority (Non-preemptive) (p.47–48) ─────────────────────────
-        function schedulePriority(procs) {
-            const pool = procs.map(p => ({ ...p, done: false }));
-            const gantt = [], results = {};
-            let time = 0, completed = 0;
-            while (completed < pool.length) {
-                const avail = pool.filter(p => !p.done && p.arrival <= time);
-                if (!avail.length) {
-                    const next = pool.filter(p => !p.done).sort((a, b) => a.arrival - b.arrival)[0];
-                    time = emitIdle(gantt, time, next.arrival);
-                    continue;
-                }
-                // lower number = higher priority; ties → FCFS (p.47)
-                avail.sort((a, b) => a.priority - b.priority || a.arrival - b.arrival || a.id - b.id);
-                const p = avail[0];
-                const start = time, end = start + p.burst;
-                gantt.push({ pid: p.id, name: p.name, start, end, color: p.color });
-                results[p.id] = buildResult(p, start, end);
-                p.done = true;
-                time = end;
-                completed++;
-            }
-            return { gantt, results };
-        }
-
-        // ── Priority (Preemptive) (p.50) ────────────────────────────────
-        function schedulePriorityPre(procs) {
-            return schedulePreemptiveByKey(procs, p => p.priority);
-        }
-
-        // ── Priority + Round Robin (p.53–54) ────────────────────────────
-        // Highest priority runs; equal priorities share the CPU with RR (quantum q).
-        // A process alone at its level keeps running after its quantum (p.54).
-        // A newly arrived higher-priority process preempts; the preempted one goes to the tail of its level.
-        function schedulePriorityRR(procs, quantum) {
-            const q = quantum;
-            const pool = procs.map(p => ({ ...p, rem: p.burst, firstStart: -1 }));
-            const sorted = [...pool].sort((a, b) => a.arrival - b.arrival || a.id - b.id);
-            const levels = new Map();                     // priority → FIFO array
-            const gantt = [], results = {}, queueTrace = [];
-            let time = 0, completed = 0, nextIdx = 0;
-            let running = null, used = 0, blockStart = 0;
-            const maxT = procs.reduce((s, p) => s + p.burst, 0) + Math.max(...procs.map(p => p.arrival)) + 1;
-
-            const enqueue = (p) => {
-                if (!levels.has(p.priority)) levels.set(p.priority, []);
-                levels.get(p.priority).push(p);
-            };
-            const admit = () => { while (nextIdx < sorted.length && sorted[nextIdx].arrival <= time) enqueue(sorted[nextIdx++]); };
-            const bestLevel = () => {
-                let best = null;
-                for (const [pr, arr] of levels) if (arr.length && (best === null || pr < best)) best = pr;
-                return best;
-            };
-            const readyOrder = () => [...levels.keys()].sort((a, b) => a - b).flatMap(pr => levels.get(pr).map(p => p.id));
-
-            admit();
-            while (completed < pool.length && time <= maxT) {
-                if (running) {
-                    const bl = bestLevel();
-                    const higherArrived = bl !== null && bl < running.priority;
-                    const quantumUp = used >= q && bl !== null && bl === running.priority;
-                    if (higherArrived || quantumUp) {
-                        gantt.push({ pid: running.id, name: running.name, start: blockStart, end: time, color: running.color });
-                        enqueue(running);
-                        running = null;
-                    } else if (used >= q) {
-                        used = 0;                         // only runnable process at its level → keeps the CPU
-                    }
-                }
-                if (!running) {
-                    const bl = bestLevel();
-                    if (bl === null) {
-                        if (nextIdx >= sorted.length) break;
-                        time = emitIdle(gantt, time, sorted[nextIdx].arrival);
-                        admit();
-                        continue;
-                    }
-                    running = levels.get(bl).shift();
-                    used = 0;
-                    blockStart = time;
-                    if (running.firstStart < 0) running.firstStart = time;
-                }
-                queueTrace[time] = readyOrder();
-                running.rem--;
-                used++;
-                time++;
-                admit();
-                if (running.rem === 0) {
-                    gantt.push({ pid: running.id, name: running.name, start: blockStart, end: time, color: running.color });
-                    results[running.id] = buildResult(running, running.firstStart, time);
-                    completed++;
-                    running = null;
-                }
-            }
-            return { gantt, results, queueTrace };
-        }
-
-        function flushBlock(gantt, pool, pid, start, end) {
-            const p = pool.find(x => x.id === pid);
-            gantt.push({ pid, name: p.name, start, end, color: p.color });
-        }
-
-        /* ════════════════════════════════════════════════════════════════
-           DISPATCH
-           ════════════════════════════════════════════════════════════════ */
-        const ALGO_FN = {
-            fcfs: scheduleFCFS,
-            sjf: scheduleSJF,
-            sjf_preemptive: scheduleSRTF,
-            rr: scheduleRR,
-            priority: schedulePriority,
-            priority_preemptive: schedulePriorityPre,
-            priority_rr: schedulePriorityRR,
-        };
-
-        function dispatch(algo, procs, quantum) {
-            const fn = ALGO_FN[algo];
-            return QUANTUM_ALGOS.includes(algo) ? fn(procs, quantum) : fn(procs);
-        }
-
         function algoLabel(algo, quantum) {
             return ALGO_LABELS[algo] + (QUANTUM_ALGOS.includes(algo) ? ` (q=${quantum})` : '');
-        }
-
-        /* ════════════════════════════════════════════════════════════════
-           STATS — makespan, CPU utilization, throughput, context switches
-           Context switch = the CPU goes directly from one process to a
-           different process. Voluntary = the previous process finished;
-           nonvoluntary = it was preempted (Ch.4 p.16).
-           ════════════════════════════════════════════════════════════════ */
-        function computeStats(result, n) {
-            const g = result.gantt;
-            if (!g || !g.length) {
-                return { totalTime: 0, idleTime: 0, cpuUtil: 0, throughput: 0, contextSwitches: 0, voluntary: 0, nonvoluntary: 0 };
-            }
-            const totalTime = g[g.length - 1].end;     // schedule starts at t = 0
-            let idleTime = 0, voluntary = 0, nonvoluntary = 0, prev = null;
-            for (const b of g) {
-                if (b.pid === null) { idleTime += b.end - b.start; prev = null; continue; }
-                if (prev && prev.pid !== b.pid && prev.end === b.start) {
-                    if (result.results[prev.pid].finish === prev.end) voluntary++;
-                    else nonvoluntary++;
-                }
-                prev = b;
-            }
-            return {
-                totalTime,
-                idleTime,
-                cpuUtil: totalTime > 0 ? (totalTime - idleTime) / totalTime * 100 : 0,
-                throughput: totalTime > 0 ? n / totalTime : 0,
-                contextSwitches: voluntary + nonvoluntary,
-                voluntary,
-                nonvoluntary,
-            };
-        }
-
-        function averages(result) {
-            const vals = Object.values(result.results);
-            const n = vals.length || 1;
-            return {
-                avgWaiting: vals.reduce((s, v) => s + v.waiting, 0) / n,
-                avgTurnaround: vals.reduce((s, v) => s + v.turnaround, 0) / n,
-                avgResponse: vals.reduce((s, v) => s + v.response, 0) / n,
-            };
-        }
-
-        /* ════════════════════════════════════════════════════════════════
-           STEP-BY-STEP ANIMATION TIMELINE BUILDER
-           Snapshot at time t = state during the interval [t, t+1).
-           ════════════════════════════════════════════════════════════════ */
-        function readyComparator(algo, rem) {
-            const fifo = (a, b) => a.arrival - b.arrival || a.id - b.id;
-            switch (algo) {
-                case 'sjf': return (a, b) => a.burst - b.burst || fifo(a, b);
-                case 'sjf_preemptive': return (a, b) => rem.get(a.id) - rem.get(b.id) || fifo(a, b);
-                case 'priority':
-                case 'priority_preemptive':
-                case 'priority_rr': return (a, b) => a.priority - b.priority || fifo(a, b);
-                default: return fifo;
-            }
         }
 
         function queueHintKey(algo) {
@@ -2854,54 +2325,6 @@
                 fcfs: 'qorder.fifo', rr: 'qorder.fifo', sjf: 'qorder.burst', sjf_preemptive: 'qorder.rem',
                 priority: 'qorder.pri', priority_preemptive: 'qorder.pri', priority_rr: 'qorder.prirr',
             }[algo];
-        }
-
-        function buildAnimTimeline(result, procs, algo) {
-            const g = result.gantt;
-            if (!g || !g.length) return [];
-            const totalTime = g[g.length - 1].end;
-            const byId = new Map(procs.map(p => [p.id, p]));
-            const finish = new Map(procs.map(p => [p.id, result.results[p.id].finish]));
-            const rem = new Map(procs.map(p => [p.id, p.burst]));
-            const cmp = readyComparator(algo, rem);
-            const chip = (p) => ({
-                pid: p.id, name: p.name, color: p.color,
-                arrival: p.arrival, burst: p.burst, priority: p.priority,
-                rem: rem.get(p.id), finish: finish.get(p.id),
-            });
-            const timeline = [];
-            let bi = 0;
-
-            for (let t = 0; t <= totalTime; t++) {
-                while (bi < g.length && g[bi].end <= t) bi++;
-                const runningId = (bi < g.length && g[bi].start <= t && g[bi].pid !== null) ? g[bi].pid : null;
-
-                const completed = procs
-                    .filter(p => finish.get(p.id) <= t)
-                    .sort((a, b) => finish.get(a.id) - finish.get(b.id) || a.id - b.id);
-
-                const ready = procs.filter(p => p.arrival <= t && finish.get(p.id) > t && p.id !== runningId);
-                const trace = result.queueTrace && result.queueTrace[t];
-                if (trace) {
-                    const pos = new Map(trace.map((id, i) => [id, i]));
-                    const at = (p) => (pos.has(p.id) ? pos.get(p.id) : Infinity);
-                    ready.sort((a, b) => (at(a) - at(b)) || cmp(a, b));
-                } else {
-                    ready.sort(cmp);
-                }
-
-                timeline.push({
-                    time: t,
-                    running: runningId !== null ? chip(byId.get(runningId)) : null,
-                    readyQueue: ready.map(chip),
-                    completed: completed.map(chip),
-                    // only blocks that have actually started (no zero-length blocks)
-                    ganttUpTo: g.filter(b => b.start < t).map(b => ({ ...b, end: Math.min(b.end, t) })),
-                });
-
-                if (runningId !== null) rem.set(runningId, rem.get(runningId) - 1);
-            }
-            return timeline;
         }
 
         /* ════════════════════════════════════════════════════════════════
@@ -3020,6 +2443,14 @@
             $('pipeCompItems').innerHTML = snap.completed.length
                 ? snap.completed.map(p => chipHtml(p, 'completed', !prev.completed.has(p.pid), 'opacity:0.75;')).join('')
                 : empty('—');
+
+            // Render Real-time Scheduling Decision Reason (Phase 2)
+            const decisionBox = $('pipeDecision');
+            if (decisionBox && snap.reason) {
+                const title = t('pipe.reason.title', { t: snap.time });
+                const text = t(snap.reason.key, snap.reason.vars);
+                decisionBox.innerHTML = `<strong>${title}</strong> <span class="pipeline__decision-text">${text}</span>`;
+            }
 
             pipePrev = {
                 ready: new Set(snap.readyQueue.map(p => p.pid)),
@@ -3212,10 +2643,12 @@
             trackEl.innerHTML = gantt.map((b, i) => {
                 const dur = b.end - b.start;
                 const idle = b.pid === null;
-                const ci = idle ? -1 : processes.findIndex(p => p.id === b.pid) % 10;
+                const pIdx = processes.findIndex(p => p.id === b.pid);
+                const pColor = b.color || (idle ? '' : PALETTE[(pIdx >= 0 ? pIdx : 0) % PALETTE.length]);
                 const tip = idle ? `${t('gantt.idle')}: ${b.start}→${b.end}` : `${b.name}: ${b.start}→${b.end} (${dur} ms)`;
-                return `<div class="gantt__block ${idle ? 'gantt__block--idle' : `pc-${ci}`}"
-                     style="flex:${dur};min-width:${minPx}px;${animate ? `animation-delay:${Math.min(i * 0.06, 1.5)}s` : ''}"
+                const bgStyle = idle ? '' : `background:${pColor};color:#0f172a;`;
+                return `<div class="gantt__block ${idle ? 'gantt__block--idle' : ''}"
+                     style="flex:${dur};min-width:${minPx}px;${bgStyle}${animate ? `animation-delay:${Math.min(i * 0.06, 1.5)}s` : ''}"
                      data-tip="${tip}">${idle ? t('gantt.idle') : b.name}</div>`;
             }).join('');
 
@@ -3279,24 +2712,36 @@
         function renderCompTable() {
             $('theadCompare').innerHTML = `<tr>
         <th>${t('th.algorithm')}</th><th>${t('th.avgW')}</th><th>${t('th.avgT')}</th>
-        <th>${t('th.avgR')}</th><th>${t('th.cs')}</th>
+        <th>${t('th.avgR')}</th><th>${t('th.cs')}</th><th>${t('th.util')}</th><th>${t('th.makespan')}</th><th>${t('th.throughput')}</th>
     </tr>`;
 
             const min = (f) => Math.min(...ALL_ALGO_KEYS.map(a => f(comparisonData[a])));
+            const max = (f) => Math.max(...ALL_ALGO_KEYS.map(a => f(comparisonData[a])));
             const minW = min(d => d.avgWaiting);
             const minT = min(d => d.avgTurnaround);
             const minR = min(d => d.avgResponse);
             const minC = min(d => d.stats.contextSwitches);
-            const hl = (v, best) => Math.abs(v - best) < EPS ? 'color:var(--emerald);font-weight:800;' : '';
+            const maxU = max(d => d.stats.cpuUtil);
+            const minM = min(d => d.stats.totalTime);
+            const maxTp = max(d => d.stats.throughput);
+
+            // WCAG AA: Highlight using both star badge + bold + color (not color alone)
+            const formatCell = (val, isBest, suffix = '') => {
+                const str = (typeof val === 'number' && !Number.isInteger(val) ? val.toFixed(2) : String(val)) + suffix;
+                return isBest ? `<span class="star-best">★ ${str}</span>` : str;
+            };
 
             $('tbodyCompare').innerHTML = ALL_ALGO_KEYS.map(a => {
                 const d = comparisonData[a];
                 return `<tr>
             <td style="text-align:left;font-family:Inter,sans-serif;font-weight:600;">${d.label}</td>
-            <td style="${hl(d.avgWaiting, minW)}">${d.avgWaiting.toFixed(2)}</td>
-            <td style="${hl(d.avgTurnaround, minT)}">${d.avgTurnaround.toFixed(2)}</td>
-            <td style="${hl(d.avgResponse, minR)}">${d.avgResponse.toFixed(2)}</td>
-            <td style="${hl(d.stats.contextSwitches, minC)}">${d.stats.contextSwitches}</td>
+            <td>${formatCell(d.avgWaiting, Math.abs(d.avgWaiting - minW) < EPS)}</td>
+            <td>${formatCell(d.avgTurnaround, Math.abs(d.avgTurnaround - minT) < EPS)}</td>
+            <td>${formatCell(d.avgResponse, Math.abs(d.avgResponse - minR) < EPS)}</td>
+            <td>${formatCell(d.stats.contextSwitches, d.stats.contextSwitches === minC)}</td>
+            <td>${formatCell(d.stats.cpuUtil, Math.abs(d.stats.cpuUtil - maxU) < EPS, '%')}</td>
+            <td>${formatCell(d.stats.totalTime, d.stats.totalTime === minM, ' ms')}</td>
+            <td>${formatCell(d.stats.throughput, Math.abs(d.stats.throughput - maxTp) < EPS)}</td>
         </tr>`;
             }).join('');
         }
@@ -3351,10 +2796,27 @@
         });
         window.addEventListener('scroll', () => ganttTip.classList.remove('is-visible'), { passive: true });
 
-        // Enter key to quickly add processes
+        // Keyboard accessibility & playback shortcuts (WCAG 2.1.1)
         document.addEventListener('keydown', (e) => {
+            const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName);
             if (e.key === 'Enter' && ['inpBurst', 'inpArrival', 'inpPriority'].includes(document.activeElement?.id)) {
                 addProcess();
+                return;
+            }
+            if (!isInput && $('sectionResult').style.display !== 'none') {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    animTogglePlay();
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    animStepFwd();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    animStepBack();
+                } else if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    animReset();
+                }
             }
         });
     </script>
