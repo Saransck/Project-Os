@@ -16,7 +16,7 @@
 | **Speaker 2** | 2:00 – 4:00 | สไลด์ 3 & 4 | 7 อัลกอริทึม & แถบ 6 Presets + ระบบสุ่ม | ชี้แถบ 6 Test Presets, ระบบสุ่ม Uniform/Exp |
 | **Speaker 3** | 4:00 – 6:00 | **Live Demo 1** | สไลด์ 5 & 6 (Pipeline & Visualizing States) | **คลิก Preset SRTF (p.36) กด Run, ก้าว $t=0 \rightarrow 1 \rightarrow 5$** |
 | **Speaker 4** | 6:00 – 8:00 | **Live Demo 2** | สไลด์ 7 & 8 (สูตรวัดผล & ตารางเปรียบเทียบ) | **คลิก Compare All, ชี้ 4 ตัวชี้วัด & Best Value $\bigstar$** |
-| **Speaker 5** | 8:00 – 10:00 | สไลด์ 9 – 12 | 3 ข้อแลกเปลี่ยนทางวิศวกรรม, สรุป & Q&A | สรุปบทเรียน OS, เปิดสไลด์ทีมกลุ่ม 16 & รับคำถาม |
+| **Speaker 5** | 8:00 – 10:00 | สไลด์ 9 – 12 | 3 ข้อแลกเปลี่ยนทางวิศวกรรม, สรุป & จบการนำเสนอ | สรุปบทเรียน OS, ขอบคุณและเปิดสไลด์ทีมกลุ่ม 16 |
 
 ---
 
@@ -101,30 +101,27 @@
 ## 👤 SPEAKER 3 (4:00 – 6:00): Live Demo (Part 1) — ไปป์ไลน์และเหตุผลการจัดคิว
 
 ### 📌 สไลด์ 5 / หน้าเว็บ: CPU Pipeline & Step-by-Step Playback
-* **🎬 Action Cue:** `[คลิกปุ่ม Preset "SRTF · 8,4,9,5 (p.36)" แล้วกดปุ่ม "🚀 Run Simulation" -> หน้าจอเริ่มจำลองที่ t = 0 (P1 ครอง CPU) -> คลิกปุ่ม "⏭ Next" หรือกดลูกศรขวา (→) ไปที่ t = 1 ชี้กล่องเหตุผล -> คลิก "⏭ Next" ก้าวต่อไปที่ t = 5]`
+* **🎬 Action Cue:** `[กด Preset SRTF แล้วกด "🚀 จำลองการทำงาน" (t=0) -> คลิก "⏭ ถัดไป" (t=1) ชี้กล่องเหตุผล -> คลิกต่อเนื่องไปที่ t=5]`
 
 * **🗣️ English Script:**
-  > *`[Action: Click preset "SRTF · 8,4,9,5 (p.36)" and click "🚀 Run Simulation" — simulation starts at t = 0]`*  
-  > *"Thank you. Let's see the simulator in action!*  
-  > *We loaded the benchmark for **SRTF**.*  
-  > *At time $t = 0$, only P1 has arrived, so P1 starts running on the CPU.*  
-  > *`[Action: Click "⏭ Next" or press Arrow Right (→) to step to t = 1]`*  
-  > *Now look at the screen at time $t = 1$: P2 arrives with a burst of 4, which is less than P1's remaining 7.*  
-  > *As you can see, **P2 is now in the Running CPU**, while **P1 has been preempted and moved into the Ready Queue**!*  
-  > *Our real-time **Decision Reason Box** immediately explains this preemption.*  
-  > *`[Action: Click "⏭ Next" repeatedly to step to t = 5]`*  
-  > *By time $t = 5$, P2 finishes its 4 ms burst and moves to Completed, allowing P4 to take the CPU as the next shortest job."*
+  > *`[Action: Load SRTF and click "🚀 Run Simulation" (t = 0)]`*  
+  > *"Here is our live pipeline demo using **SRTF**.*  
+  > *At $t = 0$, P1 arrives and starts running on the CPU.*  
+  > *`[Action: Step to t = 1]`*  
+  > *At $t = 1$, P2 arrives with burst 4, which is less than P1's remaining 7.*  
+  > *P2 preempts P1 into the Ready Queue, explained live in our **Decision Reason Box**.*  
+  > *`[Action: Step to t = 5]`*  
+  > *By $t = 5$, P2 finishes and moves to Completed, passing the CPU to P4."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *`[ท่าทาง: คลิก Preset "SRTF · 8,4,9,5 (p.36)" แล้วกดปุ่ม "🚀 จำลองการทำงาน" — หน้าจอจะเริ่มจำลองที่ t = 0]`*  
-  > *"ขอบคุณครับ ตอนนี้เรามาดูการทำงานจริงบนเว็บกันครับ!*  
-  > *เรากดโหลดชุดทดสอบ **SRTF** แล้วกดปุ่มจำลองการทำงาน ที่เวลาเริ่มต้น $t = 0$ มีเพียง P1 มาถึงตัวแรก จึงได้ครอง CPU ไปก่อน*  
-  > *`[ท่าทาง: คลิกปุ่ม "⏭ ถัดไป" หรือกดลูกศรขวา (→) เพื่อก้าวไปที่ t = 1]`*  
-  > *คราวนี้ดูที่หน้าจอเวลา $t = 1$ นะครับ: P2 เพิ่งมาถึงด้วย burst 4 ซึ่งน้อยกว่าเวลาที่เหลือของ P1 (7 ms)*  
-  > *จะเห็นชัดเจนเลยครับว่า **P2 เข้าไปอยู่ในช่อง Running แทนทันที** ส่วน **P1 ถูกเตะกลับไปรออยู่ใน Ready Queue** ทางซ้ายมือ!*  
-  > *และสังเกตที่ **กล่อง 💡 เหตุผลการจัดคิว (Decision Reason)** นะครับ ระบบจะพิมพ์บอกเหตุผลการแย่ง CPU อย่างชัดเจนทันที*  
-  > *`[ท่าทาง: คลิกปุ่ม "⏭ ถัดไป" ต่อเนื่องจนถึง t = 5]`*  
-  > *เมื่อถึงเวลา $t = 5$, P2 ทำงานครบ 4 ms และย้ายไปช่อง Completed ทำให้ P4 ที่มีเวลาน้อยที่สุดขึ้นมารันต่อทันทีครับ"*
+  > *`[ท่าทาง: โหลด Preset SRTF แล้วกด "🚀 จำลองการทำงาน" (t = 0)]`*  
+  > *"มาดูการทำงานจริงของไปป์ไลน์บนชุดทดสอบ **SRTF** ครับ*  
+  > *ที่ $t = 0$: P1 มาถึงตัวแรก จึงได้ครอง CPU ไปก่อน*  
+  > *`[ท่าทาง: คลิก "⏭ ถัดไป" ไปที่ t = 1]`*  
+  > *ที่ $t = 1$: P2 มาถึงด้วย burst 4 ซึ่งสั้นกว่า 7 ms ของ P1*  
+  > *P2 จึงชิง CPU ไปรันทันที ส่วน P1 ถูกเตะกลับไปรอใน Ready Queue โดยมี **กล่องเหตุผล** อธิบายชัดเจนครับ*  
+  > *`[ท่าทาง: คลิกต่อเนื่องไปที่ t = 5]`*  
+  > *และเมื่อถึง $t = 5$: P2 รันเสร็จย้ายไปช่อง Completed และส่งต่อ CPU ให้ P4 ทันทีครับ"*
 
 ---
 
@@ -216,18 +213,19 @@
 
 ---
 
-### 📌 สไลด์ 10, 11 & 12: สรุปสถาปัตยกรรม, ขอบคุณ และแนะนำสมาชิก (Conclusion & Q&A)
-* **🎬 Action Cue:** `[สลับไปสไลด์ 10 สรุปเทคโนโลยี -> สลับไปสไลด์ 11 Thank You -> สลับไปสไลด์ 12 แสดงรายชื่อสมาชิกกลุ่ม 16 ทั้ง 5 คน ค้างไว้ที่จอ สบตากรรมการ เปิดเวทีรับคำถาม]`
+### 📌 สไลด์ 10, 11 & 12: สรุปสถาปัตยกรรม, ขอบคุณ และจบการนำเสนอ (Conclusion & Wrap-up)
+* **🎬 Action Cue:** `[เปิดสไลด์ 10 พูดสรุป 3 หัวข้อ -> พูดขอบคุณพร้อมสลับไปสไลด์ 11 Thank You และจบที่สไลด์ 12 รายชื่อสมาชิกกลุ่ม 16 ค้างไว้ที่จอ สบตากรรมการและผู้ฟังอย่างมั่นใจ]`
 
 * **🗣️ English Script:**
-  > *"To conclude, our application is built with **Pure HTML5, CSS Grid, and Vanilla JavaScript**, with zero external heavy frameworks.*  
-  > *It features an automated test suite of 13 unit tests, runs with zero build setup, and supports full English and Thai localization.*  
-  > *`[Action: Transition to Slide 11 & 12 - Member List]`*  
-  > *On behalf of Group 16, thank you very much for your time and attention.*  
-  > *We are now ready to answer your questions and test any custom numbers live on screen!"*
+  > *"To conclude, our simulator delivers on three key pillars:*  
+  > *1. **Clean Architecture:** Built purely with HTML5, CSS3, and Vanilla JavaScript, backed by 13 unit tests.*  
+  > *2. **UX Features:** Smooth animations, bilingual support, responsive layout, and Light/Dark themes.*  
+  > *3. **Pedagogical Value:** A direct interactive companion for mastering Operating System Chapter 4.*  
+  > *On behalf of Group 16, thank you very much for your time and attention."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *"สรุปส่งท้ายนะครับ เว็บแอปพลิเคชันของเราพัฒนาด้วย **Pure HTML5, CSS Grid และ Vanilla JavaScript** 100% โดยไม่มีการพึ่งพา framework ภายนอก*  
-  > *มีชุดทดสอบ Unit Test 13 ชุดรับประกันความถูกต้อง ไม่ต้องติดตั้งโปรแกรมเพิ่ม และรองรับทั้งภาษาไทยและอังกฤษอย่างสมบูรณ์ครับ*  
-  > *`[ท่าทาง: เลื่อนไปสไลด์ 11 Thank You และสไลด์ 12 แสดงรายชื่อสมาชิกกลุ่ม 16 ทั้ง 5 คน]`*  
-  > *ในนามของกลุ่มที่ 16 ขอขอบคุณอาจารย์และเพื่อน ๆ ทุกท่านครับ และตอนนี้พวกเราพร้อมตอบทุกคำถาม หรือทดลองกรอกตัวเลขท้าทายเพื่อรันสดให้ดูได้เลยครับ ขอบคุณครับ"*
+  > *"สรุปส่งท้ายนะครับ เว็บแอปพลิเคชันของเราตอบโจทย์สำคัญ 3 ด้านครับ:*  
+  > *ข้อแรก **Clean Architecture:** พัฒนาด้วย Pure HTML5, CSS3 และ Vanilla JavaScript 100% ไร้ dependency ภายนอก พร้อม 13 Unit Tests รับประกันความถูกต้อง*  
+  > *ข้อสอง **UX Features:** มีแอนิเมชันที่ลื่นไหล รองรับทั้งภาษาไทยและอังกฤษ ปรับตามหน้าจอ และมีโหมด Light/Dark Theme*  
+  > *ข้อสาม **Pedagogical Value:** เป็นสื่อการเรียนรู้แบบโต้ตอบ ที่ช่วยให้เข้าใจทฤษฎีบทที่ 4 ได้อย่างเห็นภาพจริงครับ*  
+  > *ในนามของกลุ่มที่ 16 ขอขอบพระคุณอาจารย์และเพื่อนๆ ทุกท่านเป็นอย่างยิ่งครับ ขอบคุณครับ"*
