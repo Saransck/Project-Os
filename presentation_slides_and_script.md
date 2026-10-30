@@ -43,19 +43,18 @@
 * **🎬 Action Cue:** `[สลับไปสไลด์ 2 ชี้ภาพวงจร CPU burst สลับกับ I/O burst และ 4 ขั้นตอนบนสไลด์]`
 
 * **🗣️ English Script:**
-  > *"Why do we need CPU scheduling?*  
-  > *Real programs alternate between CPU calculation and waiting for I/O devices.*  
-  > *This is known as the **CPU-I/O burst cycle**.*  
-  > *Without scheduling, the CPU sits idle while waiting for I/O, wasting processing power.*  
-  > *Through **multiprogramming**, the OS picks another ready process immediately.*  
-  > *Next, Speaker 2 will introduce our algorithms and test presets."*
+  > *"Why does CPU scheduling matter?*  
+  > *Programs alternate between computing and waiting for I/O—the **CPU-I/O burst cycle**.*  
+  > *When a process waits, an idle CPU wastes valuable time.*  
+  > *Through **multiprogramming**, the OS immediately runs another ready process to maximize utilization.*  
+  > ***Next, to Speaker 2** for our algorithms."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *"ทำไมระบบปฏิบัติการถึงต้องมี CPU Scheduling?*  
-  > *เพราะในความเป็นจริง โปรแกรมไม่ได้รันงานคำนวณตลอดเวลา แต่จะสลับระหว่างการคำนวณบน CPU กับการรออุปกรณ์ I/O ซึ่งเรียกว่า **CPU-I/O burst cycle** ครับ*  
-  > *ถ้าไม่มีการจัดคิว เมื่อโปรแกรมรอ I/O ตัว CPU ก็จะว่างเปล่าและเสียเวลาไปโดยเปล่าประโยชน์*  
-  > *ด้วยเทคนิค **Multiprogramming** ระบบจะสลับเอา process อื่นที่พร้อมขึ้นมารันแทนทันที*  
-  > *ในลำดับถัดไป ผู้พูดคนที่ 2 จะมาแนะนำอัลกอริทึมและชุดทดสอบครับ"*
+  > *"ทำไมต้องจัดคิว CPU?*  
+  > *เพราะโปรแกรมจริงต้องสลับระหว่างคำนวณกับการรอ I/O เสมอครับ*  
+  > *ถ้าไม่มีการจัดคิว CPU จะต้องนั่งรอเฉยๆ ทำให้เสียเวลาไปฟรีๆ*  
+  > *OS จึงใช้ **Multiprogramming** ดึงงานอื่นที่พร้อมขึ้นมารันแทนทันทีเพื่อความคุ้มค่าสูงสุด*  
+  > *ขอส่งต่อให้ **ผู้พูดคนที่ 2** แนะนำอัลกอริทึมครับ"*
 
 ---
 
