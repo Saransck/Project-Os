@@ -14,7 +14,7 @@
 | :--- | :---: | :---: | :--- | :--- |
 | **Speaker 1** | 0:00 – 2:00 | สไลด์ 1 & 2 | เกริ่นนำกลุ่ม 16, วัตถุประสงค์ & วงจร CPU-I/O Burst | แนะนำระบบ, ชี้วงจร Burst Cycle (01–04) |
 | **Speaker 2** | 2:00 – 4:00 | สไลด์ 3 & 4 | 7 อัลกอริทึม & แถบ 6 Presets + ระบบสุ่ม | ชี้แถบ 6 Test Presets, ระบบสุ่ม Uniform/Exp |
-| **Speaker 3** | 4:00 – 6:00 | **Live Demo 1** | สไลด์ 5 & 6 (Pipeline & Visualizing States) | **คลิก Preset SRTF (p.36) กด Run, ก้าว $t=0 \rightarrow 1 \rightarrow 5$** |
+| **Speaker 3** | 4:00 – 6:00 | **Live Demo 1** | สไลด์ 5 & 6 (Pipeline, Timeline & Results Table) | **คลิก Preset SRTF (p.36) กด Run, ก้าว $t=0 \rightarrow 1 \rightarrow 5$** |
 | **Speaker 4** | 6:00 – 8:00 | **Live Demo 2** | สไลด์ 7 & 8 (สูตรวัดผล & ตารางเปรียบเทียบ) | **คลิก Compare All, ชี้ 4 ตัวชี้วัด & Best Value $\bigstar$** |
 | **Speaker 5** | 8:00 – 10:00 | สไลด์ 9 – 12 | 3 ข้อแลกเปลี่ยนทางวิศวกรรม, สรุป & จบการนำเสนอ | สรุปบทเรียน OS, ขอบคุณและเปิดสไลด์ทีมกลุ่ม 16 |
 
@@ -66,17 +66,17 @@
 
 * **🗣️ English Script:**
   > *"Thank you, Speaker 1.*  
-  > *Our simulator implements 7 scheduling algorithms across two core classes.*  
-  > *First, **Non-preemptive algorithms**, including **FCFS**, **Shortest-Job-First (SJF)**, and **Priority**.*  
-  > *Here, a running process keeps the CPU until completion.*  
-  > *Second, **Preemptive algorithms**, including **SRTF**, **Round Robin**, **Priority Preemptive**, and the **Priority + RR hybrid**.*  
-  > *The OS can interrupt the running task when a shorter job arrives, or when the **Time Quantum** expires."*
+  > *Our simulator supports **seven** CPU scheduling algorithms.*  
+  > *There are two main types: **Non-preemptive** and **Preemptive**.*  
+  > *Non-preemptive means a process uses the CPU until it finishes, like **FCFS** and **SJF**.*  
+  > *Preemptive means the system can stop a process and switch to another one, like **SRTF** and **Round Robin**.*  
+  > *We also support **Priority Scheduling** and a combination of **Priority and Round Robin**."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *"ขอบคุณผู้พูดคนที่ 1 ครับ โปรแกรมของเราจำลอง 7 อัลกอริทึมตามตำราและแบบประยุกต์ โดยแบ่งเป็น 2 กลุ่มชัดเจนครับ:*  
-  > *กลุ่มแรกคือ **Non-preemptive (ไม่แย่งชิง)** ได้แก่ **FCFS**, **SJF ปกติ**, และ **Priority** เมื่อ process ได้ CPU จะรันต่อเนื่องจนจบงาน*  
-  > *กลุ่มที่สองคือ **Preemptive (แย่งชิงได้)** ได้แก่ **SRTF**, **Round Robin**, **Priority Preemptive**, และ **Priority + RR***  
-  > *ซึ่ง OS สามารถดึง CPU คืนได้ทันทีเมื่องานที่สั้นกว่าหรือสำคัญกว่ามาถึง หรือเมื่อหมดเวลา Time Quantum ครับ"*
+  > *"ขอบคุณผู้พูดคนที่ 1 ครับ โปรแกรมของเราจำลอง **7 อัลกอริทึม** โดยแบ่งเป็น 2 กลุ่มหลักครับ:*  
+  > *กลุ่มแรกคือ **Non-preemptive** โปรเซสจะรันจนกว่าจะจบงาน เช่น **FCFS** และ **SJF***  
+  > *กลุ่มที่สองคือ **Preemptive** ระบบสามารถหยุดงานเดิมและสลับไปรันงานอื่นได้ทันที เช่น **SRTF** และ **Round Robin***  
+  > *นอกจากนี้ยังรองรับ **Priority Scheduling** และรูปแบบผสมผสาน **Priority + Round Robin** ด้วยครับ"*
 
 ---
 
@@ -84,66 +84,69 @@
 * **🎬 Action Cue:** `[สลับหน้าจอไปที่หน้า Web App ชี้แถบปุ่ม Test Presets 6 ปุ่มด้านบน และแผงสุ่มข้อมูล]`
 
 * **🗣️ English Script:**
-  > *"To make testing effortless, we provide **6 one-click Test Presets** right at the top.*  
-  > *These cover benchmarks like **FCFS**, **Convoy Effect**, **SJF**, **SRTF**, **Round Robin**, and **Priority**.*  
-  > *Clicking any preset instantly loads all arrival times, bursts, and priorities.*  
-  > *Users can also add custom processes or use our **Random Generator** with **Uniform or Exponential distributions** to model short I/O bursts.*  
-  > *Now, Speaker 3 will demonstrate a live simulation using the SRTF preset."*
+  > *"For testing, we provide ready-to-use examples from the textbook.*  
+  > *Users can also add their own processes or generate random processes.*  
+  > *We support two types of random distributions: **Uniform** and **Exponential**.*  
+  > *Exponential is useful because real CPU bursts are often short.*  
+  > *Now, let's move on to Speaker 3, who will show you how the simulator works using the **SRTF preset**."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *"เพื่อให้การทดสอบในห้องเรียนสะดวกรวดเร็ว ด้านบนของเว็บจะมีแถบ **Test Presets ทั้งหมด 6 ปุ่มหลัก** ให้คลิกใช้งานทันทีครับ*  
-  > *ครอบคลุมโจทย์มาตรฐานครบถ้วน ทั้ง FCFS, ปรากฏการณ์ Convoy Effect, SJF, SRTF, Round Robin, และ Priority ครับ*  
-  > *เพียงคลิกปุ่มเดียว ระบบจะกรอกข้อมูลพร้อมจำลองทันที หรือจะป้อนข้อมูลเอง และใช้ระบบสุ่มทั้งแบบ **Uniform หรือ Exponential** เพื่อจำลองงาน I/O ในโลกจริงก็ได้ครับ*  
-  > *ต่อไป ขอเชิญผู้พูดคนที่ 3 สาธิตการรันจริงบนชุดทดสอบ SRTF ครับ"*
+  > *"สำหรับการทดสอบ เรามีชุดตัวอย่างโจทย์จริงจากตำราให้คลิกใช้งานได้ทันทีครับ*  
+  > *ผู้ใช้สามารถเพิ่มโปรเซสเอง หรือใช้ระบบสุ่มข้อมูลก็ได้*  
+  > *โดยระบบสุ่มรองรับ 2 รูปแบบ คือ **Uniform** และ **Exponential***  
+  > *ซึ่งแบบ Exponential มีประโยชน์มาก เพราะจำลองพฤติกรรมจริงที่งาน CPU burst มักจะสั้นครับ*  
+  > *ลำดับถัดไป ขอส่งต่อให้ผู้พูดคนที่ 3 สาธิตการทำงานจริงบนชุดทดสอบ **SRTF** ครับ"*
 
 ---
 
 ## 👤 SPEAKER 3 (4:00 – 6:00): Live Demo (Part 1) — ไปป์ไลน์และเหตุผลการจัดคิว
 
 ### 📌 สไลด์ 5 / หน้าเว็บ: CPU Pipeline & Step-by-Step Playback
-* **🎬 Action Cue:** `[กด Preset SRTF แล้วกด "🚀 จำลองการทำงาน" (t=0) -> คลิก "⏭ ถัดไป" (t=1) ชี้กล่องเหตุผล -> คลิกต่อเนื่องไปที่ t=5]`
+* **🎬 Action Cue:** `[กด Preset SRTF แล้วกด "🚀 จำลองการทำงาน" (t=0) -> คลิก "⏭ ถัดไป" (t=1) ชี้กล่องเหตุผล -> คลิกต่อเนื่องไปที่ t=5 -> กด ▶ Play ให้รันจนจบที่ t=26]`
 
 * **🗣️ English Script:**
   > *`[Action: Load SRTF and click "🚀 Run Simulation" (t = 0)]`*  
-  > *"Here is our live pipeline demo using **SRTF**.*  
+  > *"Thank you, Speaker 2. Here is our live pipeline demo using **SRTF**.*  
   > *At $t = 0$, P1 arrives and starts running on the CPU.*  
   > *`[Action: Step to t = 1]`*  
   > *At $t = 1$, P2 arrives with burst 4, which is less than P1's remaining 7.*  
   > *P2 preempts P1 into the Ready Queue, explained live in our **Decision Reason Box**.*  
   > *`[Action: Step to t = 5]`*  
-  > *By $t = 5$, P2 finishes and moves to Completed, passing the CPU to P4."*
+  > *By $t = 5$, P2 finishes and moves to Completed, passing the CPU to P4.*  
+  > *`[Action: Click ▶ Play to let animation run to completion]`*  
+  > *From there, we can press **Play** to let the simulation run automatically until all processes finish at **$t = 26$**."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
   > *`[ท่าทาง: โหลด Preset SRTF แล้วกด "🚀 จำลองการทำงาน" (t = 0)]`*  
-  > *"มาดูการทำงานจริงของไปป์ไลน์บนชุดทดสอบ **SRTF** ครับ*  
+  > *"ขอบคุณผู้พูดคนที่ 2 ครับ มาดูการทำงานจริงของไปป์ไลน์บนชุดทดสอบ **SRTF** ครับ*  
   > *ที่ $t = 0$: P1 มาถึงตัวแรก จึงได้ครอง CPU ไปก่อน*  
   > *`[ท่าทาง: คลิก "⏭ ถัดไป" ไปที่ t = 1]`*  
   > *ที่ $t = 1$: P2 มาถึงด้วย burst 4 ซึ่งสั้นกว่า 7 ms ของ P1*  
   > *P2 จึงชิง CPU ไปรันทันที ส่วน P1 ถูกเตะกลับไปรอใน Ready Queue โดยมี **กล่องเหตุผล** อธิบายชัดเจนครับ*  
   > *`[ท่าทาง: คลิกต่อเนื่องไปที่ t = 5]`*  
-  > *และเมื่อถึง $t = 5$: P2 รันเสร็จย้ายไปช่อง Completed และส่งต่อ CPU ให้ P4 ทันทีครับ"*
+  > *เมื่อถึง $t = 5$: P2 รันเสร็จย้ายไปช่อง Completed และส่งต่อ CPU ให้ P4*  
+  > *`[ท่าทาง: คลิกปุ่ม ▶ Play ให้แอนิเมชันวิ่งต่อเองจนจบ]`*  
+  > *และเราสามารถกดปุ่ม **เล่น (Play)** เพื่อให้ระบบรันต่ออัตโนมัติจนกระทั่งทุกโปรเซสทำงานเสร็จสิ้นที่เวลา **$t = 26$** ครับ"*
 
 ---
 
-### 📌 สไลด์ 6 / หน้าเว็บ: Visualizing Process States (Gantt Chart vs. Timeline)
-* **🎬 Action Cue:** `[ชี้ Gantt Chart ด้านบน แล้วชี้แถบ Per-Process Timeline ด้านล่าง -> Hover เมาส์บนแท่ง Timeline หรือ Gantt โชว์ Tooltip สดๆ บนจอ]`
+### 📌 สไลด์ 6 / หน้าเว็บ: Visualizing Process States & Results Table
+* **🎬 Action Cue:** `[ชี้ Gantt Chart ด้านบน ชี้ Per-Process Timeline ตรงกลาง (Hover โชว์ Tooltip) -> เลื่อนลงมาชี้ Results Table ด้านล่าง]`
 
 * **🗣️ English Script:**
-  > *"Below, we visualize execution through two synchronized views:*  
-  > *1. **Gantt Chart (Macro):** Shows CPU allocation over time.*  
-  > *2. **Per-Process Timeline (Micro):** Shows each individual process across all time units.*  
-  > *Solid bars with **'R'** mean Running; striped bars with **'W'** mean Waiting.*  
-  > *Hovering over any block reveals exact timing tooltips.*  
-  > *Next, Speaker 4 will present performance metrics."*
+  > *"Below, the system provides three complementary views:*  
+  > *1. **Gantt Chart:** Macro view of CPU allocation over time.*  
+  > *2. **Per-Process Timeline:** Micro timeline tracking Running (**'R'**) and Waiting (**'W'**) states with interactive tooltips.*  
+  > *3. **Results Table:** Exact numerical breakdown of completion, turnaround, and waiting times for each process.*  
+  > *Next, Speaker 4 will present performance formulas and the Compare All showdown."*
 
 * **🇹🇭 คำพูดภาษาไทย:**
-  > *`[ท่าทาง: ชี้ Gantt Chart แล้วชี้แถบ Per-Process Timeline ด้านล่าง -> เอาเมาส์ Hover บนแท่ง Timeline หรือ Gantt โชว์ Tooltip]`*  
-  > *"ด้านล่างเราแสดงผล 2 มุมมองคู่ขนานกันครับ:*  
-  > *1. **Gantt Chart (Macro):** แสดงการจัดสรร CPU ตลอดช่วงเวลา*  
-  > *2. **Per-Process Timeline (Micro):** แสดงสถานะของแต่ละ Process ตลอดทุกหน่วยเวลา*  
-  > *แถบสีทึบ **'R'** คือ Running และแถบลายทแยง **'W'** คือ Waiting ในคิว*  
-  > *เมื่อเอาเมาส์ Hover บนแท่ง Gantt หรือ Timeline จะแสดง **Tooltip** บอกช่วงเวลาทำงานทันทีครับ*  
-  > *ต่อไป ขอเชิญผู้พูดคนที่ 4 สรุปตัวชี้วัดและตารางเปรียบเทียบครับ"*
+  > *`[ท่าทาง: ชี้ Gantt Chart ด้านบน ชี้ Timeline ตรงกลาง (Hover โชว์ Tooltip) -> เลื่อนลงมาชี้ Results Table ด้านล่าง]`*  
+  > *"ด้านล่างระบบแสดงผล 3 มุมมองที่เติมเต็มซึ่งกันและกันครับ:*  
+  > *1. **Gantt Chart:** ภาพรวมการจัดสรร CPU ตลอดช่วงเวลา*  
+  > *2. **Per-Process Timeline:** ไทม์ไลน์เจาะลึกสถานะ Running (**'R'**) และ Waiting (**'W'**) พร้อม Tooltip เมื่อชี้เมาส์*  
+  > *3. **ตารางผลลัพธ์ (Results Table):** แจกแจงตัวเลขเวลาจบงาน, Turnaround และเวลารอคอยของทุก Process อย่างละเอียด*  
+  > *ต่อไป ขอส่งต่อให้ผู้พูดคนที่ 4 สรุปสูตรการวัดผลและตารางเปรียบเทียบครับ"*
 
 ---
 
